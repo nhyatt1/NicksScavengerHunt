@@ -3,13 +3,16 @@ import { View, Text, Button, FlatList, TouchableOpacity, Alert, TextInput, Keybo
 import { useDispatch, useSelector } from 'react-redux';
 import { removeToken } from './slices.js';
 import { styles } from './styles.js';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function HuntsPage({navigation}){
+
     const dispatch = useDispatch();
-    const token = useSelector((state) => state.token.tokens)
+    const token = useSelector((state) => state.token.tokens);
     const [newHunt, setNewHunt] = useState('')
     const [myHunts, setMyHunts] = useState([])
     const [buttonPressed, setButtonPressed] = useState(false);
+    const isFocused = useIsFocused();
 
     useEffect(() => {
         navigation.setOptions({
@@ -55,12 +58,12 @@ export default function HuntsPage({navigation}){
             }
                 
     })()
-    }, [buttonPressed]);
+    }, [buttonPressed, isFocused]);
 
     const addHunt = async () => {
         let formData = new FormData();
         formData.append('name', newHunt);
-        formData.append('token', token[0])
+        formData.append('token', token[0]);
 
         const result = await fetch('https://cpsc345sh.jayshaffstall.com/addHunt.php', {
             method: 'POST',
@@ -88,14 +91,14 @@ export default function HuntsPage({navigation}){
         }
     }
     return(
-        <KeyboardAvoidingView style={styles.container}>
+        <KeyboardAvoidingView behavior='position' style={styles.container} contentContainerStyle={{alignItems: 'center'}}>
             <Text style={{fontWeight:'bold', fontSize: 25, marginTop: 20}}>
                 Your Scavenger Hunts:
             </Text>
             <Text style={{fontWeight:'200', fontSize: 20}}>
                 Scroll to see more
             </Text>
-            <View style={{height:250, width: 250, alignContent: 'center'}}>
+            <View style={{height:200, width: 250, alignContent: 'center'}}>
             <FlatList
                 style={{marginTop: 10, alignContent: 'center'}}
                 data = {myHunts}

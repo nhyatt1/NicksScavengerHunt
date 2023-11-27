@@ -9,6 +9,7 @@ import SplashPage from './splash.js';
 import AuthenticationPage from './authentication.js';
 import HuntsPage from './hunts.js';
 import DetailsPage from './details.js';
+import LocationPage from './location.js';
 
 const persistor = persistStore(store)
 const Stack = createNativeStackNavigator()
@@ -39,6 +40,11 @@ export default function App() {
               name="Details"
               component={DetailsPage}
               options={{title: 'Details'}}
+            />
+            <Stack.Screen
+              name="Location"
+              component={LocationPage}
+              options={{title: 'Location Details'}}
             />
           </Stack.Navigator>
         </NavigationContainer>

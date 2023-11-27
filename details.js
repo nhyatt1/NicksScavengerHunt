@@ -1,27 +1,34 @@
-import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView } from "react-native"
+import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView, TouchableOpacity } from "react-native"
 import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { styles } from "./styles.js";
+import { Dropdown } from 'react-native-element-dropdown';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { removeToken } from "./slices.js";
+import { useIsFocused } from "@react-navigation/native";
 
 export default function HuntDetails({navigation, route}){
+    const dropdownData = [
+        { label: 'Not Active (Private)', value: '0' },
+        { label: 'Active (Public)', value: '1' },
+      ];
+    const [activeValue, setActiveValue] = useState('');
     const dispatch = useDispatch();
     const token = useSelector(state => state.token.tokens);
-    const Hunt = route.params.hunt;
+    const [Hunt, setHunt] = useState(route.params.hunt);
     const [newName, setNewName] = useState('');
+    const [huntLocation, setHuntLocation] = useState();
+    const [newLocation, setNewLocation] = useState('')
+    const [locplaceholder, setLocplaceholder] = useState('Loading...')
+    const [updateCheck, SetUpdateCheck] = useState(false);
+    const isFocused = useIsFocused();
 
-
-    const updateConfirmation = () =>
-        Alert.alert('ARE YOU SURE?', 'The name of this hunt will be changed for everyone.', [
-            {text: 'Confirm', onPress:() => updateHunt()},
-            {text: 'Cancel', onPress:()=>{console.log('Cancel Pressed')}, style: 'cancel'}
-    ]);
-    const updateHunt = async () =>{
-        console.log('Updating Hunt...')
+    useEffect(()=>{(async () => {
+        console.log('Fetching Hunt Location... (useEffect1)')
         let formData = new FormData();
         formData.append('token', token[0]);
         formData.append('huntid', Hunt.huntid);
-        formData.append('name', newName)
-        const result = await fetch('https://cpsc345sh.jayshaffstall.com/updateHunt.php', {
+        const result = await fetch('https://cpsc345sh.jayshaffstall.com/getHuntLocations.php', {
             method: 'POST',
             body: formData
         });
@@ -35,10 +42,90 @@ export default function HuntDetails({navigation, route}){
                 return;
             }
             else{
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Hunts' }],
-                  })
+                console.log('data.locations:' , data.locations)
+                setHuntLocation(data.locations[0]);
+                if(huntLocation == null){
+                    setLocplaceholder("None, add a location below!");
+                }
+            }   
+        }
+        else{
+            console.log("Error fetching data, status code: " + result.status)
+            Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
+                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+            return;
+        }
+    })()
+
+    },[isFocused, updateCheck]);
+
+    useEffect(()=>{(async()=>{
+        console.log('UseEffect2')
+        let formData = new FormData();
+            formData.append("token", token[0]);
+
+            const result = await fetch('https://cpsc345sh.jayshaffstall.com/getMyHunts.php',{
+                method: 'POST',
+                body: formData
+                })
+            if (result.ok){
+                const data = await result.json()
+                console.log("general data:", data);
+                
+                setHunt(data.hunts.find(obj => obj.huntid === Hunt.huntid));
+                setNewName('');
+                setNewLocation('');
+            }
+            else{
+                console.log("Error fetching data, status code: " + result.status)
+                Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
+                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+            }
+    })()}, [updateCheck])
+    
+
+    const updateConfirmation = () =>
+        Alert.alert('ARE YOU SURE?', 'You are changing this hunt\'s details.', [
+            {text: 'Confirm', onPress:() => updateHunt()},
+            {text: 'Cancel', onPress:()=>{console.log('Cancel Pressed')}, style: 'cancel'}
+    ]);
+    const updateHunt = async () =>{
+        console.log('Updating Hunt...')
+        let formData = new FormData();
+        formData.append('token', token[0]);
+        formData.append('huntid', Hunt.huntid);
+        if (newName == ''){
+            formData.append('name', Hunt.name)
+        }
+        else{
+            formData.append('name', newName);
+        }
+        if (activeValue == ''){
+            if (Hunt.active == true){
+                formData.append('active', 1)
+            }
+            else{
+                formData.append('active', 0)
+            }
+        }else{
+            formData.append('active', activeValue)
+        }
+        
+        const result = await fetch('https://cpsc345sh.jayshaffstall.com/updateHunt.php', {
+            method: 'POST',
+            body: formData
+        });
+        if(result.ok){
+            const data = await result.json()
+            console.log('Status:', data.status)
+            console.log('update data:', data);
+            if (data.status == "error"){
+                Alert.alert('Oops!', String(data.error), [
+                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                return;
+            }
+            else{
+                SetUpdateCheck(!updateCheck);
             }   
         }
         else{
@@ -66,7 +153,7 @@ export default function HuntDetails({navigation, route}){
         if(result.ok){
             const data = await result.json()
             console.log('Status:', data.status)
-            console.log('data:', data);
+            console.log('delete data:', data);
             if (data.status == "error"){
                 Alert.alert('Oops!', String(data.error), [
                     {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
@@ -77,6 +164,37 @@ export default function HuntDetails({navigation, route}){
                     index: 0,
                     routes: [{ name: 'Hunts' }],
                   })
+            }   
+        }
+        else{
+            console.log("Error fetching data, status code: " + result.status)
+            Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
+                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+            return;
+        }
+    }
+
+    const addLocation = async () =>{
+        console.log('Updating Hunt...')
+        let formData = new FormData();
+        formData.append('token', token[0]);
+        formData.append('huntid', Hunt.huntid);
+        formData.append('name', newLocation);
+        const result = await fetch('https://cpsc345sh.jayshaffstall.com/addHuntLocation.php', {
+            method: 'POST',
+            body: formData
+        });
+        if(result.ok){
+            const data = await result.json()
+            console.log('Status:', data.status)
+            console.log('add location data:', data);
+            if (data.status == "error"){
+                Alert.alert('Oops!', String(data.error), [
+                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                return;
+            }
+            else{
+                SetUpdateCheck(!updateCheck);
             }   
         }
         else{
@@ -108,15 +226,53 @@ export default function HuntDetails({navigation, route}){
       }, [navigation, dispatch]);
     
     return(
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-            <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center', marginBottom: 20}}>
-                Hunt Name: <Text style={{fontSize: 20, fontWeight: '200'}}>{Hunt.name}{"\n"}</Text>Hunt ID: <Text style={{fontSize: 20, fontWeight: '200'}}>{Hunt.huntid}</Text>
+        <KeyboardAvoidingView behavior='position' style={styles.container} contentContainerStyle={{ alignItems: 'center' }}>
+            <Text style={{fontSize: 30, fontWeight: '400', textAlign:'center'}}>
+                Hunt Name: <Text style={{fontSize: 30, fontWeight: '200'}}>{Hunt.name}</Text>
             </Text>
-            <Button title="Delete this Hunt" onPress={deleteConfirmation}/>
-            <Text style={{fontSize:20, fontWeight:'400', marginBottom: 20}}>Want to update this Hunt?</Text>
-            <TextInput onChangeText={text => setNewName(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 20}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new name:' />
-            <Button title="Update this Hunt" onPress={updateConfirmation} disabled={newName == ''}/>
+            <TouchableOpacity
+                        disabled={huntLocation == null} onPress={ () => {{navigation.navigate('Location', {hunt: Hunt, location: huntLocation}); console.log('Location Pressed')}} }> 
+                <Text style={{fontSize: 30, fontWeight: '400', textAlign:'center'}}>
+                    Hunt Location: <Text style={{fontSize: 30, fontWeight: '200'}}>{huntLocation == null?  locplaceholder: huntLocation.name + ". Tap to see more details"}</Text>
+                </Text>
+            </TouchableOpacity>
+            <Text style={{fontSize: 30, fontWeight: '400', textAlign:'center'}}>
+                    Hunt Privacy: <Text style={{fontSize: 30, fontWeight: '200'}}>{Hunt.active == true?  "Active (Public)": "Not Active (Private)"}</Text>
+            </Text>
+            <AntDesign.Button backgroundColor='#FF0000' name='delete' onPress={deleteConfirmation}>Delete this Hunt?</AntDesign.Button>
+            <Text style={{fontSize:20, fontWeight:'300', marginTop: 20}}>Want to update this hunt's details?</Text>
+            <TextInput value={newName} onChangeText={text => setNewName(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 20}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new Hunt name:' />
+            <Dropdown
+                style={styles.dropdown}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                inputSearchStyle={styles.inputSearchStyle}
+                iconStyle={styles.iconStyle}
+                data={dropdownData}
+                search
+                maxHeight={200}
+                labelField="label"
+                valueField="value"
+                placeholder="Choose Hunt Privacy"
+                searchPlaceholder="Search..."
+                value={activeValue}
+                onChange={item => {
+                    setActiveValue(item.value);
+                }}
+                renderLeftIcon={() => (
+                    <AntDesign style={styles.icon} color="black" name="Safety" size={20} />
+                )}
+            />
+            <Button title="Update this Hunt" onPress={updateConfirmation} disabled={newName == '' && activeValue == ''}/>
+            {huntLocation == null?
+            <>
+            <Text style={{fontSize:20, fontWeight:'300', marginTop:20}}>Want to add a location?</Text>
+            <TextInput value={newLocation} onChangeText={text => setNewLocation(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 10}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new Location name:' />
+            <Button title="Add the location" onPress={addLocation} disabled={newLocation == ''}/>
+            </>
+            :
+            <></>
+            }
         </KeyboardAvoidingView>
-        
     )
 }
