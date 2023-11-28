@@ -248,6 +248,11 @@ export default function LocationPage({navigation, route}){
         let formData = new FormData();
         formData.append('token', token[0]);
         formData.append('locationid', huntLocation.locationid);
+
+        //Need to edit this:
+        // {This will return an error if there is another location that
+        //     has a condition depending on this location. The other location's condition must be deleted first
+        //     to avoid breaking the overall hunt.}
         const result = await fetch('https://cpsc345sh.jayshaffstall.com/deleteHuntLocation.php', {
             method: 'POST',
             body: formData
@@ -276,34 +281,53 @@ export default function LocationPage({navigation, route}){
     
     return(
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'position' : 'position'} style={styles.container} >
-            <ScrollView contentContainerStyle={{ alignItems: 'center' }}>
-                <Text style={{fontSize: 25, fontWeight: '300', textAlign:'center'}}>
-                    Location Name: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocation.name}{'\n'}</Text>Description: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocation.description == ''? 'None' : huntLocation.description}{"\n"}</Text>Clue: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocation.clue == ''? 'None' : huntLocation.clue}</Text>
+            <ScrollView overScrollMode='always' contentContainerStyle={{alignItems: 'center', }}>
+                <Text style={{fontSize: 20, fontWeight: '300', textAlign:'center'}}>
+                    Location Name: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocation.name}{'\n'}</Text>Description: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocation.description == ''? 'None' : huntLocation.description}{"\n"}</Text>Clue: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocation.clue == ''? 'None' : huntLocation.clue}</Text>
                 </Text>
                 <AntDesign.Button name='delete' backgroundColor={'#FF0000'} onPress={deleteConfirmation}>Delete this Location?</AntDesign.Button>
-                <MapView style={{width: '100%', height: '30%', marginBottom: 10, marginTop: 10}} 
-                    initialRegion={userLocation}
-                    region = {region}>
-                        <Marker
-                        key='currentLocation'
-                        identifier={'currentlocation'}
-                        onPress={()=>console.log(region)}
-                        coordinate={region}
-                        title='Location Position'
-                        description="This is the Hunt's current Position."
-                        />
-                </MapView>
+                        {huntLocation.latitude == null && huntLocation.longitude == null ?
+                        <>
+                        <MapView style={{width: '80%', height: '40%', marginBottom: 10, marginTop: 10}} 
+                            initialRegion={userLocation}
+                            region = {userLocation}>
+                            <Marker
+                                    key='huntPosition'
+                                    identifier={'huntPosition'}
+                                    onPress={()=>console.log(region)}
+                                    coordinate={userLocation}
+                                    title='You'
+                                    description="This is your current location."
+                                />
+                            </MapView>
+                        </>
+                        :
+                        <><MapView style={{width: '80%', height: '40%', marginBottom: 10, marginTop: 10}} 
+                        initialRegion={userLocation}
+                        region = {region}>
+                            <Marker
+                                key='huntPosition'
+                                identifier={'huntPosition'}
+                                onPress={()=>console.log(region)}
+                                coordinate={region}
+                                title='Location Position'
+                                description="This is the Hunt's current Position."
+                            />
+                            </MapView>
+                        </>
+                        }
+
                 {huntLocation.latitude == null && huntLocation.longitude == null ? 
                     <>
                     <TouchableOpacity onPress={setLocationPosition}>
-                        <Text style={{fontSize: 25, fontWeight: '300', textAlign:'center'}}>
+                        <Text style={{fontSize: 20, fontWeight: '300', textAlign:'center'}}>
                             Press this text to set your current position as this hunt's position. (Can be changed later)
                         </Text>
                     </TouchableOpacity>
                     </>
                 :
                     <>
-                    <Text style={{fontSize: 25, fontWeight: '300', textAlign:'center'}}>
+                    <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center'}}>
                         Update the coordinates of your Hunt's position Here:
                     </Text>
                        
@@ -330,7 +354,7 @@ export default function LocationPage({navigation, route}){
                     <Button title='Update the position' onPress={setLocationPosition} disabled={((newLatitude != '')? !(parseFloat(newLatitude) >= -90 && parseFloat(newLatitude) <= 90) : newLatitude =='')|| ((newLongitude != '')?  !(parseFloat(newLongitude) >= -180 && parseFloat(newLongitude) <= 180) : newLongitude =='')}/>
                     </>
                 }
-                <Text style={{fontSize: 25, fontWeight: '300', textAlign:'center', marginTop: 20}}>
+                <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center', marginTop: 10}}>
                     {huntLocation.description == '' & huntLocation.clue == ''? "Please enter a description and Clue for this Location" : "Update the location here:"}
                 </Text>
                 <TextInput value={newName} onChangeText={text => setNewName(text)} maxlength={255} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new location name (optional):'/>

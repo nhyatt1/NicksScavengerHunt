@@ -10,6 +10,7 @@ import AuthenticationPage from './authentication.js';
 import HuntsPage from './hunts.js';
 import DetailsPage from './details.js';
 import LocationPage from './location.js';
+import ConditionsPage from './conditions.js';
 
 const persistor = persistStore(store)
 const Stack = createNativeStackNavigator()
@@ -45,6 +46,11 @@ export default function App() {
               name="Location"
               component={LocationPage}
               options={{title: 'Location Details'}}
+            />
+            <Stack.Screen
+              name="Conditions"
+              component={ConditionsPage}
+              options={{title: 'Conditions'}}
             />
           </Stack.Navigator>
         </NavigationContainer>

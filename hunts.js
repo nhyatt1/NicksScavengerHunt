@@ -22,7 +22,6 @@ export default function HuntsPage({navigation}){
               onPress={() => {
                 console.log('User Logged out!')
                 dispatch(removeToken());
-                console.log('values in token array:', token)
                 navigation.reset({
                   index: 0,
                   routes: [{ name: 'Authentication' }],
@@ -99,10 +98,10 @@ export default function HuntsPage({navigation}){
                 Scroll to see more
             </Text>
             <View style={{height:200, width: 250, alignContent: 'center'}}>
-            <FlatList
-                style={{marginTop: 10, alignContent: 'center'}}
-                data = {myHunts}
-                renderItem ={({item}) => (
+                <FlatList
+                    style={{marginTop: 10, alignContent: 'center'}}
+                    data = {myHunts}
+                    renderItem ={({item}) => (
                     <TouchableOpacity
                         onPress={ () => {setButtonPressed(!buttonPressed); {navigation.navigate('Details', {hunt: item}); console.log('Hunt Pressed', item)}} }> 
                         <View>

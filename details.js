@@ -18,12 +18,15 @@ export default function HuntDetails({navigation, route}){
     const [Hunt, setHunt] = useState(route.params.hunt);
     const [newName, setNewName] = useState('');
     const [huntLocation, setHuntLocation] = useState();
+    const [huntConditions, setHuntConditions] = useState(null);
     const [newLocation, setNewLocation] = useState('')
     const [locplaceholder, setLocplaceholder] = useState('Loading...')
+    const [condplaceholder, setCondplaceholder] = useState('Loading...')
     const [updateCheck, SetUpdateCheck] = useState(false);
     const isFocused = useIsFocused();
 
     useEffect(()=>{(async () => {
+        let templocations = {};
         console.log('Fetching Hunt Location... (useEffect1)')
         let formData = new FormData();
         formData.append('token', token[0]);
@@ -44,6 +47,7 @@ export default function HuntDetails({navigation, route}){
             else{
                 console.log('data.locations:' , data.locations)
                 setHuntLocation(data.locations[0]);
+                templocations = data.locations[0];
                 if(huntLocation == null){
                     setLocplaceholder("None, add a location below!");
                 }
@@ -51,9 +55,44 @@ export default function HuntDetails({navigation, route}){
         }
         else{
             console.log("Error fetching data, status code: " + result.status)
-            Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
+            Alert.alert('Oops! Something went wrong with "getHuntLocations.php" API. Please try again, or come back another time.', String(result.status), [
                 {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+            
+        }
+        console.log('Fetching Hunt conditions... (useEffect1)', templocations)
+        let form = new FormData();
+        if (templocations == null){
+            setCondplaceholder("None, please update the location first!")
             return;
+        }
+        form.append('locationid', templocations.locationid);
+        form.append('token', token[0])
+        const response = await fetch('https://cpsc345sh.jayshaffstall.com/getConditions.php', {
+            method: 'POST',
+            body: form
+        });
+        if(response.ok){
+            const data = await response.json()
+            console.log('Status:', data.status)
+            console.log('data:', data);
+            if (data.status == "error"){
+                Alert.alert('Oops!', String(data.error), [
+                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                return;
+            }
+            else{
+                console.log('data.conditions:' , data.conditions)
+                setHuntConditions(data.conditions[0]);
+                if(huntConditions == null){
+                    setCondplaceholder("None, tap here to update conditions!");
+                }
+            }   
+        }
+        else{
+            console.log("Error fetching data, status code: " + result.status)
+            Alert.alert('Oops! Something went wrong with "getConditions.php" from the API. Please try again, or come back another time.', String(result.status), [
+                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+            
         }
     })()
 
@@ -82,6 +121,7 @@ export default function HuntDetails({navigation, route}){
                     {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
             }
     })()}, [updateCheck])
+
     
 
     const updateConfirmation = () =>
@@ -213,7 +253,6 @@ export default function HuntDetails({navigation, route}){
               onPress={() => {
                 console.log('User Logged out!')
                 dispatch(removeToken());
-                console.log('values in token array:', token)
                 navigation.reset({
                   index: 0,
                   routes: [{ name: 'Authentication' }],
@@ -227,18 +266,24 @@ export default function HuntDetails({navigation, route}){
     
     return(
         <KeyboardAvoidingView behavior='position' style={styles.container} contentContainerStyle={{ alignItems: 'center' }}>
-            <Text style={{fontSize: 30, fontWeight: '400', textAlign:'center'}}>
-                Hunt Name: <Text style={{fontSize: 30, fontWeight: '200'}}>{Hunt.name}</Text>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
+                Name: <Text style={{fontSize: 25, fontWeight: '200'}}>{Hunt.name}</Text>
             </Text>
             <TouchableOpacity
                         disabled={huntLocation == null} onPress={ () => {{navigation.navigate('Location', {hunt: Hunt, location: huntLocation}); console.log('Location Pressed')}} }> 
-                <Text style={{fontSize: 30, fontWeight: '400', textAlign:'center'}}>
-                    Hunt Location: <Text style={{fontSize: 30, fontWeight: '200'}}>{huntLocation == null?  locplaceholder: huntLocation.name + ". Tap to see more details"}</Text>
+                <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
+                    Location: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocation == null?  locplaceholder: huntLocation.name + ". Tap to see more details"}</Text>
                 </Text>
             </TouchableOpacity>
-            <Text style={{fontSize: 30, fontWeight: '400', textAlign:'center'}}>
-                    Hunt Privacy: <Text style={{fontSize: 30, fontWeight: '200'}}>{Hunt.active == true?  "Active (Public)": "Not Active (Private)"}</Text>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
+                    Privacy: <Text style={{fontSize: 25, fontWeight: '200'}}>{Hunt.active == true?  "Active (Public)": "Not Active (Private)"}</Text>
             </Text>
+            <TouchableOpacity
+                        disabled={condplaceholder == 'Loading...'} onPress={ () => {{navigation.navigate('Conditions', {hunt: Hunt, location: huntLocation, conditions: huntConditions}); console.log('Conditions Pressed')}} }> 
+                <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
+                    Conditions: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null?  condplaceholder: huntConditions.starttime == null && huntConditions.endtime == null? "Required Location": "Period of Visibility"}</Text>
+                </Text>
+            </TouchableOpacity>
             <AntDesign.Button backgroundColor='#FF0000' name='delete' onPress={deleteConfirmation}>Delete this Hunt?</AntDesign.Button>
             <Text style={{fontSize:20, fontWeight:'300', marginTop: 20}}>Want to update this hunt's details?</Text>
             <TextInput value={newName} onChangeText={text => setNewName(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 20}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new Hunt name:' />
