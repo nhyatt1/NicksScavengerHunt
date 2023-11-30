@@ -293,7 +293,7 @@ export default function HuntDetails({navigation, route}){
             <TouchableOpacity
                         disabled={condplaceholder == 'Loading...' || huntLocation == null} onPress={ () => {{navigation.navigate('Conditions', {hunt: Hunt, location: huntLocation, conditions: huntConditions, requiredlocationid:requiredlocationid}); console.log('Conditions Pressed, huntConditions is:', huntConditions)}} }> 
                 <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
-                    Conditions: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null?  condplaceholder: huntConditions.starttime == null && huntConditions.endtime == null? "Required Location": "Period of Visibility"}</Text>
+                    Conditions: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null?  condplaceholder: huntConditions.starttime == null && huntConditions.endtime == null? "Required Location": "Visibility Time Interval"}</Text>
                 </Text>
             </TouchableOpacity>
             <AntDesign.Button backgroundColor='#FF0000' name='delete' onPress={deleteConfirmation}>Delete this Hunt?</AntDesign.Button>

@@ -340,7 +340,7 @@ export default function ConditionsPage({navigation, route}){
                 Current Hunt: <Text style={{fontSize: 25, fontWeight: '200'}}>{Hunt.name}</Text>
             </Text>
             <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
-                Condition type: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null?  "None, press ONE of the options below (editable later):": huntConditions.starttime == null && huntConditions.endtime == null? "Required Location": "Period of Visibility"}</Text>
+                Condition type: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null?  "None, press ONE of the options below (editable later):": huntConditions.starttime == null && huntConditions.endtime == null? "Required Location": "Visibility Time Interval"}</Text>
             </Text>
             {huntConditions == null?
             <></>

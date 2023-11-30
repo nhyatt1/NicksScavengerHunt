@@ -95,9 +95,14 @@ export default function HuntsPage({navigation}){
                     console.log('current element name', locationsArr[i].name)
                     console.log('data.conditions:' , data.conditions)
                     if(data.conditions[0] != null){
-                        tempCondArr.push(data.conditions[0].requiredlocationid)
-                        console.log("temp loc arr", i, tempCondArr)
-                        setConditionsArr(tempCondArr);
+                        if (data.conditions[0].requiredlocationid == null){
+                            console.log("temp loc arr after condition is a time interval", i, tempCondArr)
+                        }else{
+                            tempCondArr.push(data.conditions[0].requiredlocationid)
+                            console.log("temp loc arr", i, tempCondArr)
+                            setConditionsArr(tempCondArr);
+                        }
+                        
                         // if(String(data.locations[0].locationid) == String(requiredlocationid)){
                         //     console.log('this events id is the same as requiredlocationid:', String(data.locations[0].locationid) == String(requiredlocationid))
 
