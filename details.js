@@ -23,6 +23,8 @@ export default function HuntDetails({navigation, route}){
     const [locplaceholder, setLocplaceholder] = useState('Loading...')
     const [condplaceholder, setCondplaceholder] = useState('Loading...')
     const [updateCheck, SetUpdateCheck] = useState(false);
+    const [requiredlocationid, setRequiredlocationid] = useState('');
+    const [locationIsRequiredArr] = useState(route.params.locationIsRequired)
     const isFocused = useIsFocused();
 
     useEffect(()=>{(async () => {
@@ -48,7 +50,7 @@ export default function HuntDetails({navigation, route}){
                 console.log('data.locations:' , data.locations)
                 setHuntLocation(data.locations[0]);
                 templocations = data.locations[0];
-                if(huntLocation == null){
+                if(templocations == null){
                     setLocplaceholder("None, add a location below!");
                 }
             }   
@@ -65,6 +67,7 @@ export default function HuntDetails({navigation, route}){
             setCondplaceholder("None, please update the location first!")
             return;
         }
+
         form.append('locationid', templocations.locationid);
         form.append('token', token[0])
         const response = await fetch('https://cpsc345sh.jayshaffstall.com/getConditions.php', {
@@ -74,7 +77,7 @@ export default function HuntDetails({navigation, route}){
         if(response.ok){
             const data = await response.json()
             console.log('Status:', data.status)
-            console.log('data:', data);
+            console.log('UE1 CONDITIONS data:', data);
             if (data.status == "error"){
                 Alert.alert('Oops!', String(data.error), [
                     {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
@@ -83,6 +86,15 @@ export default function HuntDetails({navigation, route}){
             else{
                 console.log('data.conditions:' , data.conditions)
                 setHuntConditions(data.conditions[0]);
+                if(data.conditions[0]!= null){
+                    console.log('conditions not null ')
+                    if (data.conditions[0].requiredlocationid != null){ 
+                        console.log('requiredlocationid not null:', data.conditions[0].requiredlocationid)
+                        setRequiredlocationid(data.conditions[0].requiredlocationid)
+                    }
+                }
+                
+                
                 if(huntConditions == null){
                     setCondplaceholder("None, tap here to update conditions!");
                 }
@@ -270,7 +282,7 @@ export default function HuntDetails({navigation, route}){
                 Name: <Text style={{fontSize: 25, fontWeight: '200'}}>{Hunt.name}</Text>
             </Text>
             <TouchableOpacity
-                        disabled={huntLocation == null} onPress={ () => {{navigation.navigate('Location', {hunt: Hunt, location: huntLocation}); console.log('Location Pressed')}} }> 
+                        disabled={huntLocation == null} onPress={ () => {{navigation.navigate('Location', {hunt: Hunt, location: huntLocation, locationIsRequired: locationIsRequiredArr}); console.log('Location Pressed:', locationIsRequiredArr)}} }> 
                 <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
                     Location: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocation == null?  locplaceholder: huntLocation.name + ". Tap to see more details"}</Text>
                 </Text>
@@ -279,7 +291,7 @@ export default function HuntDetails({navigation, route}){
                     Privacy: <Text style={{fontSize: 25, fontWeight: '200'}}>{Hunt.active == true?  "Active (Public)": "Not Active (Private)"}</Text>
             </Text>
             <TouchableOpacity
-                        disabled={condplaceholder == 'Loading...'} onPress={ () => {{navigation.navigate('Conditions', {hunt: Hunt, location: huntLocation, conditions: huntConditions}); console.log('Conditions Pressed')}} }> 
+                        disabled={condplaceholder == 'Loading...' || huntLocation == null} onPress={ () => {{navigation.navigate('Conditions', {hunt: Hunt, location: huntLocation, conditions: huntConditions, requiredlocationid:requiredlocationid}); console.log('Conditions Pressed, huntConditions is:', huntConditions)}} }> 
                 <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
                     Conditions: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null?  condplaceholder: huntConditions.starttime == null && huntConditions.endtime == null? "Required Location": "Period of Visibility"}</Text>
                 </Text>

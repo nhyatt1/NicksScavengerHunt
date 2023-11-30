@@ -24,12 +24,12 @@ export default function ConditionsPage({navigation, route}){
     const [spinEnd, setSpinEnd] = useState(new Date());
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
-    const [requiredlocationid, setRequiredlocationid] = useState('');
+    const [requiredlocationid, setRequiredlocationid] = useState(route.params.requiredlocationid);
     const [reqlocName, setReqLocName] = useState('loading...');
     const [view, setView] = useState(0);
-    const [updateView, setUpdateView] = useState(0);
     const [timePicker, setTimePicker] = useState(false);
     const [huntCheck, setHuntCheck] = useState(false);
+    const [firstLoad, setFirstLoad] = useState(true);
     
 
     const displayDate = (string) =>{
@@ -72,6 +72,15 @@ export default function ConditionsPage({navigation, route}){
       }, [navigation, dispatch]);
 
       useEffect(()=>{(async () => {
+
+        if (locationsArr.length == 0 || !(locationsArr.find(obj => String(obj.locationid) == String(requiredlocationid)))){
+            if (firstLoad == true){
+
+            }else{
+                setRequiredlocationid('')
+            }
+            
+        }
         console.log('Fetching Hunt conditions... (useEffect1)')
         console.log('Hunt:', Hunt)
         console.log('huntLocation:', huntLocation)
@@ -99,7 +108,7 @@ export default function ConditionsPage({navigation, route}){
                     setView(0);
                 }
 
-            }   
+            }
         }
         else{
             console.log("Error fetching data, status code: " + response.status)
@@ -166,6 +175,7 @@ export default function ConditionsPage({navigation, route}){
                         if(data.locations[0] != null){
                             tempLocArr.push(data.locations[0])
                             console.log("temp loc arr", i, tempLocArr)
+                            console.log('requiredlocationid from route:', requiredlocationid)
                             if(String(data.locations[0].locationid) == String(requiredlocationid)){
                                 console.log('this events id is the same as requiredlocationid:', String(data.locations[0].locationid) == String(requiredlocationid))
                                 setReqLocName(String(data.locations[0].name))
@@ -223,6 +233,7 @@ export default function ConditionsPage({navigation, route}){
                 setEndTime('');
                 setRequiredlocationid(value);
                 SetUpdateCheck(!updateCheck);
+                setFirstLoad(false);
                 setView(0);
             }   
         }
@@ -265,6 +276,7 @@ export default function ConditionsPage({navigation, route}){
                 setStartTime('');
                 setEndTime('');
                 SetUpdateCheck(!updateCheck);
+                setFirstLoad(false);
                 setView(0);
                 setRequiredlocationid(value);
             }   
@@ -305,6 +317,7 @@ export default function ConditionsPage({navigation, route}){
                 setStartTime('');
                 setEndTime('');
                 SetUpdateCheck(!updateCheck);
+                setFirstLoad(false);
                 //
                 setHuntCheck(!huntCheck);
                 //updates hunt array (not rlly necesary/????)
@@ -338,7 +351,7 @@ export default function ConditionsPage({navigation, route}){
                 </Text>
                 :
                 <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
-                    Start Time: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null? "":displayDate(huntConditions.starttime) +"\n" +"(" +huntConditions.starttime+ "UTC)" }</Text>{"\n"}End Time: <Text style={{fontSize: 25, fontWeight: '200'}}>: {huntConditions == null? "":displayDate(huntConditions.endtime) +"\n" +"(" +huntConditions.endtime + "UTC)" }</Text>
+                    Start Time: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null? "":displayDate(huntConditions.starttime) +"\n" +"(" +huntConditions.starttime+ " UTC)" }</Text>{"\n"}End Time: <Text style={{fontSize: 25, fontWeight: '200'}}>: {huntConditions == null? "":displayDate(huntConditions.endtime) +"\n" +"(" +huntConditions.endtime + " UTC)" }</Text>
                 </Text>
             }
             
@@ -355,7 +368,7 @@ export default function ConditionsPage({navigation, route}){
             </Text>
             </>
             }
-            <TouchableOpacity onPress={()=>{setView(1);}}>
+            <TouchableOpacity onPress={()=>{setView(1)}}>
                 <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:10}}>
                     Option 1:{"\n"} Require user to have previously visited a separate location 
                 </Text>
@@ -429,7 +442,7 @@ export default function ConditionsPage({navigation, route}){
             {locationsArr.length > 0 ?
             <>
             <Text style={{fontSize: 25, fontWeight: '200', textAlign:'center'}}>
-                    Here is a scrollable list of all of your other locations: 
+                    Here is a scrollable list of all of your other locations:{locationsArr.length == 1 && parseInt(locationsArr[0].locationid) == parseInt(requiredlocationid)? <Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center'}}>{"\n"}See nothing? Your only other location is already your requirement</Text> : <>""</>}
             </Text>
             <View style={{height:300, width: 250, alignContent: 'center'}}>
                 <FlatList
@@ -453,7 +466,7 @@ export default function ConditionsPage({navigation, route}){
                 />
             </View>
             <Text style={{fontSize: 25, fontWeight: '200', textAlign:'center'}}>
-                Tap on the location you want to make your current location's prerequisite condition
+                Tap on the location you want to make your current location's prerequisite condition.
             </Text>
             </>
             :

@@ -16,6 +16,7 @@ export default function LocationPage({navigation, route}){
     const [Hunt, setHunt] = useState(route.params.hunt);
     const [huntLocation, setHuntLocation] = useState(route.params.location);
     const [locationGranted, setLocationGranted] = useState(false)
+    const [locationIsRequired, setLocationIsRequired] = useState(false);
 
     const [newLatitude, setNewLatitude] = useState('');
     const [newLongitude, setNewLongitude] = useState('')
@@ -92,7 +93,16 @@ export default function LocationPage({navigation, route}){
                         longitudeDelta: 0.05,
                     })
                 }
-                
+                console.log("typeoflocationreqid:", typeof route.params.locationIsRequired[0], route.params.locationIsRequired[0])
+                console.log("typeof data locid:", typeof data.locations[0].locationid, data.locations[0].locationid)
+                console.log(route.params.locationIsRequired.find(element => element == data.locations[0].locationid))
+                if(route.params.locationIsRequired.find(element => element == data.locations[0].locationid) != null){
+                    console.log('true')
+                    setLocationIsRequired(true);
+                }else{
+                    console.log('false')
+
+                }
                 setHuntLocation(data.locations[0]);
                 setNewClue('');
                 setNewDescription('');
@@ -237,11 +247,16 @@ export default function LocationPage({navigation, route}){
             return;
         }
     }
-    const deleteConfirmation = () =>
-        Alert.alert('ARE YOU SURE?', 'If you delete this Location, it will not be recoverable.', [
-            {text: 'Confirm', onPress:() => deleteLocation()},
-            {text: 'Cancel', onPress:()=>{console.log('Cancel Pressed')}, style: 'cancel'}
-    ]);
+    const deleteConfirmation = () =>{
+        if (locationIsRequired == true){
+            Alert.alert('UH OH!', 'This location is a condition of a separate location. Please delete that condition first!', [
+                {text: 'OK'}])
+        }else{
+            Alert.alert('ARE YOU SURE?', 'If you delete this Location, it will not be recoverable.', [
+                {text: 'Confirm', onPress:() => deleteLocation()},
+                {text: 'Cancel', onPress:()=>{console.log('Cancel Pressed')}, style: 'cancel'}])
+        }
+    };
 
     const deleteLocation = async () =>{
         console.log('Deleting Location...')
