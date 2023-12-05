@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView, TouchableOpacity, ScrollView } from "react-native"
+import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView, TouchableOpacity } from "react-native"
 import { useEffect, useState, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { styles } from "./styles.js";
@@ -6,7 +6,6 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
 import { removeToken } from "./slices.js";
-import * as Location from 'expo-location'
 
 
 export default function LocationPage({navigation, route}){
@@ -14,65 +13,44 @@ export default function LocationPage({navigation, route}){
     const token = useSelector(state => state.token.tokens);
     
     const [Hunt, setHunt] = useState(route.params.hunt);
-    const [huntLocation, setHuntLocation] = useState(route.params.location);
-    const [locationGranted, setLocationGranted] = useState(false)
+    const [huntLocations, setHuntLocations] = useState(route.params.huntLocations);
+    const [locationIndex] = useState(route.params.locationIndex);
+    
+    const [requiredLocationIDS, setRequiredLocationIDS] = useState(route.params.requiredLocationIDS);
     const [locationIsRequired, setLocationIsRequired] = useState(false);
+    const [parentLocationIDS, setParentLocationIDS] = useState([]);
 
     const [newLatitude, setNewLatitude] = useState('');
     const [newLongitude, setNewLongitude] = useState('')
+
+    const [newLocation, setNewLocation] = useState('')
 
     const [newName, setNewName] = useState('');
     const [newClue, setNewClue] = useState('');
     const [newDescription, setNewDescription] = useState('');
 
     const [updateCheck, SetUpdateCheck] = useState(false);
-    const regionRef = useRef();
-    regionRef.current = region;
-    const [userLocation, setUserLocation] = useState({
-        latitude: 39.9937,
-        longitude: -81.7340,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05
-    });
+    // const regionRef = useRef();
+    // regionRef.current = region;
     const [region, setRegion] = useState({
-            latitude: 39.9937,
-            longitude: -81.7340,
+            latitude: route.params.huntLocations[route.params.locationIndex].latitude,
+            longitude: route.params.huntLocations[route.params.locationIndex].longitude,
             latitudeDelta: 0.05,
-            longitudeDelta: 0.05
-        })
+            longitudeDelta: 0.05})
 
 
-    useEffect(() => {
-        (async () => {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                setLocationGranted(false);
-                Alert.alert('Location Denied.', "You will not be able to use the location features of this Scavenger Hunt App. Please enable them in your settings and refresh the App.", [
-                    {text: 'OK'}
-                ]);
-                return;
-            }
-            setLocationGranted(true);
-            
-            await Location.watchPositionAsync({
-                accuracy: Location.Accuracy.Highest,
-                distanceInterval: 3,
-            }, watchLocation);
-        })();}, []);
-        
-    const watchLocation = (location) => {
-        
-            setUserLocation({
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05
-            });
-        
-    }
-    
     useEffect(()=>{(async()=>{
-        console.log('UseEffect2', region)
+        console.log('updating locations array locations screen', requiredLocationIDS)
+        let tempParents = []
+        for (let i = 0; i < requiredLocationIDS.length; i++){
+            console.log('element loop after updating locations array:',requiredLocationIDS, requiredLocationIDS[i].requiredlocationid, huntLocations[locationIndex].locationid)
+            if (parseInt(requiredLocationIDS[i].requiredlocationid) == parseInt(huntLocations[locationIndex].locationid)){
+                console.log('this location is required')
+                setLocationIsRequired(true);
+                tempParents.push(requiredLocationIDS[i].originalLocation);
+                setParentLocationIDS(tempParents);
+            }
+        }
         let formData = new FormData();
             formData.append("token", token[0]);
             formData.append("huntid", Hunt.huntid)
@@ -82,33 +60,19 @@ export default function LocationPage({navigation, route}){
                 })
             if (result.ok){
                 const data = await result.json()
-                console.log("general data:", data.locations);
-                console.log('Loc obj: ', huntLocation)
-                if (!(data.locations[0].latitude == null && data.locations[0].longitude == null)){
-                    console.log('hello2')
-                    setRegion({
-                        latitude: data.locations[0].latitude,
-                        longitude: data.locations[0].longitude,
-                        latitudeDelta: 0.05,
-                        longitudeDelta: 0.05,
-                    })
-                }
-                console.log("typeoflocationreqid:", typeof route.params.locationIsRequired[0], route.params.locationIsRequired[0])
-                console.log("typeof data locid:", typeof data.locations[0].locationid, data.locations[0].locationid)
-                console.log(route.params.locationIsRequired.find(element => element == data.locations[0].locationid))
-                if(route.params.locationIsRequired.find(element => element == data.locations[0].locationid) != null){
-                    console.log('true')
-                    setLocationIsRequired(true);
-                }else{
-                    console.log('false')
-
-                }
-                setHuntLocation(data.locations[0]);
-                setNewClue('');
-                setNewDescription('');
-                setNewName('');
-                setNewLongitude('');
-                setNewLatitude('');
+                console.log("locations to be:", data.locations);
+                console.log('previous locations: ', huntLocations)
+                
+                // console.log("typeoflocationreqid:", typeof route.params.locationIsRequired[0], route.params.locationIsRequired[0])
+                // console.log("typeof data locid:", typeof data.locations[0].locationid, data.locations[0].locationid)
+                // console.log(route.params.locationIsRequired.find(element => element == data.locations[0].locationid))
+                // if(route.params.locationIsRequired.find(element => element == data.locations[0].locationid) != null){
+                //     console.log('true')
+                //     setLocationIsRequired(true);
+                // }else{
+                //     console.log('false')
+                // }
+                setHuntLocations(data.locations);
             }
             else{
                 console.log("Error fetching data, status code: " + result.status)
@@ -141,14 +105,8 @@ export default function LocationPage({navigation, route}){
         console.log('Updating Location position...')
         let formData = new FormData();
         formData.append('token', token[0]);
-        formData.append('locationid', huntLocation.locationid);
-        if (locationGranted==false){
-            Alert.alert('Location Not Granted.', "You will not be able to use the location features of this Scavenger Hunt App until you enable them in your settings and refresh the App.", [
-                {text: 'OK'}
-            ]);
-            return;
-        }
-        if(newLongitude != '' && newLatitude != ''){
+        formData.append('locationid', huntLocations[locationIndex].locationid);
+        
             formData.append('latitude', parseFloat(newLatitude));
             formData.append('longitude', parseFloat(newLongitude));
             setRegion({
@@ -158,19 +116,7 @@ export default function LocationPage({navigation, route}){
                 longitudeDelta: 0.05
             })
             console.log("new region:", region)
-        }else{
-            // get users location
-            // console.log("user.latitude/long:", userLocation.latitude, userLocation.longitude)
-
-            formData.append('latitude', userLocation.latitude);
-            formData.append('longitude', userLocation.longitude);
-            setRegion({
-                latitude: userLocation.latitude,
-                longitude: userLocation.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05
-            })
-        }
+        
         const result = await fetch('https://cpsc345sh.jayshaffstall.com/updateHuntLocationPosition.php', {
             method: 'POST',
             body: formData
@@ -187,6 +133,8 @@ export default function LocationPage({navigation, route}){
             else{
                 console.log('success');
                 SetUpdateCheck(!updateCheck);
+                setNewLatitude('')
+                setNewLongitude('')
             }   
         }
         else{
@@ -203,22 +151,24 @@ export default function LocationPage({navigation, route}){
             {text: 'Cancel', onPress:()=>{console.log('Cancel Pressed')}, style: 'cancel'}
     ]);
     const updateLocation = async () =>{
+        // need 2 add the index.
+
         console.log('Updating Location...')
         let formData = new FormData();
         formData.append('token', token[0]);
-        formData.append('locationid', huntLocation.locationid);
+        formData.append('locationid', huntLocations[locationIndex].locationid);
         if (newName == ''){
-            formData.append('name', huntLocation.name)
+            formData.append('name', huntLocations[locationIndex].name)
         }else{
             formData.append('name', newName);
         }
         if(newDescription ==''){
-            formData.append('description', huntLocation.description)
+            formData.append('description', huntLocations[locationIndex].description)
         }else{
             formData.append('description', newDescription)
         }
         if(newClue == ''){
-            formData.append('clue', huntLocation.clue)
+            formData.append('clue', huntLocations[locationIndex].clue)
         }else{
             formData.append('clue', newClue)
         }
@@ -236,8 +186,12 @@ export default function LocationPage({navigation, route}){
                 return;
             }
             else{
-                console.log('success')
+                console.log('update success')
+                // do something to refresh page (set view 0 maybe?)
                 SetUpdateCheck(!updateCheck);
+                setNewName('');
+                setNewClue('');
+                setNewDescription('')
             }   
         }
         else{
@@ -249,7 +203,7 @@ export default function LocationPage({navigation, route}){
     }
     const deleteConfirmation = () =>{
         if (locationIsRequired == true){
-            Alert.alert('UH OH!', 'This location is a condition of a separate location. Please delete that condition first!', [
+            Alert.alert('UH OH!', 'This location is a condition of a separate location with ID: '+ parentLocationIDS[0] + ' and Name: ' + (huntLocations.find(element => element.locationid == parentLocationIDS[0])).name + '. Please delete this condition first!', [
                 {text: 'OK'}])
         }else{
             Alert.alert('ARE YOU SURE?', 'If you delete this Location, it will not be recoverable.', [
@@ -259,10 +213,14 @@ export default function LocationPage({navigation, route}){
     };
 
     const deleteLocation = async () =>{
+        if (parseInt(huntLocations[locationIndex].locationid) == parseInt(requiredLocationIDS.requiredlocationid)){
+            
+        }
         console.log('Deleting Location...')
         let formData = new FormData();
         formData.append('token', token[0]);
-        formData.append('locationid', huntLocation.locationid);
+        //need index.
+        formData.append('locationid', huntLocations[locationIndex].locationid);
 
         //Need to edit this:
         // {This will return an error if there is another location that
@@ -292,58 +250,37 @@ export default function LocationPage({navigation, route}){
             return;
         }
     }
-
     
     return(
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'position' : 'position'} style={styles.container} >
-            <ScrollView overScrollMode='always' contentContainerStyle={{alignItems: 'center', }}>
-                <Text style={{fontSize: 20, fontWeight: '300', textAlign:'center'}}>
-                    Location Name: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocation.name}{'\n'}</Text>Description: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocation.description == ''? 'None' : huntLocation.description}{"\n"}</Text>Clue: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocation.clue == ''? 'None' : huntLocation.clue}</Text>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container} keyboardVerticalOffset={150}>
+            <MapView 
+                style={{ height: '25%', width: '50%'}}
+                initialRegion={region}
+                maxZoomLevel={14}
+                minZoomLevel={14}
+                zoomEnabled={false}
+                rotateEnabled={false}
+                scrollEnabled={false}
+                region={region}
+                >
+                <Marker
+                key={locationIndex}
+                coordinate={region}
+                />
+            </MapView>
+                <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center'}}>
+                    Location Name: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocations[locationIndex].name}{'\n'}</Text>Description: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocations[locationIndex].description == ''? 'None' : huntLocations[locationIndex].description}{"\n"}</Text>Clue: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocations[locationIndex].clue == ''? 'None' : huntLocations[locationIndex].clue}</Text>
                 </Text>
+                <TouchableOpacity
+                        onPress={ () => {{navigation.navigate('Conditions', {hunt: Hunt, location: huntLocations[locationIndex], huntLocations: huntLocations, parentLocationIDS: parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index)}); setParentLocationIDS(parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index));console.log('condit presed', parentLocationIDS)}}}> 
+                <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center'}}>
+                    Conditions: <Text style={{fontSize: 20, fontWeight: '200'}}>Tap here to see the conditions of this location.</Text>
+                </Text>
+            </TouchableOpacity>
                 <AntDesign.Button name='delete' backgroundColor={'#FF0000'} onPress={deleteConfirmation}>Delete this Location?</AntDesign.Button>
-                        {huntLocation.latitude == null && huntLocation.longitude == null ?
-                        <>
-                        <MapView style={{width: '80%', height: '40%', marginBottom: 10, marginTop: 10}} 
-                            initialRegion={userLocation}
-                            region = {userLocation}>
-                            <Marker
-                                    key='huntPosition'
-                                    identifier={'huntPosition'}
-                                    onPress={()=>console.log(region)}
-                                    coordinate={userLocation}
-                                    title='You'
-                                    description="This is your current location."
-                                />
-                            </MapView>
-                        </>
-                        :
-                        <><MapView style={{width: '80%', height: '40%', marginBottom: 10, marginTop: 10}} 
-                        initialRegion={userLocation}
-                        region = {region}>
-                            <Marker
-                                key='huntPosition'
-                                identifier={'huntPosition'}
-                                onPress={()=>console.log(region)}
-                                coordinate={region}
-                                title='Location Position'
-                                description="This is the Hunt's current Position."
-                            />
-                            </MapView>
-                        </>
-                        }
-
-                {huntLocation.latitude == null && huntLocation.longitude == null ? 
-                    <>
-                    <TouchableOpacity onPress={setLocationPosition}>
-                        <Text style={{fontSize: 20, fontWeight: '300', textAlign:'center'}}>
-                            Press this text to set your current position as this hunt's position. (Can be changed later)
-                        </Text>
-                    </TouchableOpacity>
-                    </>
-                :
-                    <>
+                        
                     <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center'}}>
-                        Update the coordinates of your Hunt's position Here:
+                        Update the coordinates of your Hunt's position Here (cannot be 0, 0):
                     </Text>
                        
                         <View style={{flexDirection:'row'}}>
@@ -366,17 +303,21 @@ export default function LocationPage({navigation, route}){
                         }}/>
                             <TextInput value={newLongitude} keyboardType='decimal-pad' onChangeText={text => setNewLongitude(text)} maxlength={255} style={{width: 250, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' textAlign='center' placeholder='Enter a new Longitude:'/>
                         </View>
-                    <Button title='Update the position' onPress={setLocationPosition} disabled={((newLatitude != '')? !(parseFloat(newLatitude) >= -90 && parseFloat(newLatitude) <= 90) : newLatitude =='')|| ((newLongitude != '')?  !(parseFloat(newLongitude) >= -180 && parseFloat(newLongitude) <= 180) : newLongitude =='')}/>
-                    </>
-                }
+                    <Button title='Update the position' onPress={setLocationPosition} disabled={((newLatitude != '')? !(parseFloat(newLatitude) >= -90 && parseFloat(newLatitude) <= 90) : newLatitude =='')|| ((newLongitude != '')?  !(parseFloat(newLongitude) >= -180 && parseFloat(newLongitude) <= 180) : newLongitude =='')||(newLatitude == parseFloat(0) && newLongitude == parseFloat(0))}/>
+
                 <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center', marginTop: 10}}>
-                    {huntLocation.description == '' & huntLocation.clue == ''? "Please enter a description and Clue for this Location" : "Update the location here:"}
+                    {huntLocations[locationIndex].description == '' & huntLocations[locationIndex].clue == ''? "Please enter a description and Clue for this Location" : "Update the location here:"}
                 </Text>
                 <TextInput value={newName} onChangeText={text => setNewName(text)} maxlength={255} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new location name (optional):'/>
                 <TextInput value={newDescription} onChangeText={text => setNewDescription(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Update the location description:'/>
                 <TextInput value={newClue} onChangeText={text => setNewClue(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Update the location clue:'/>
-                <Button title='Update Location Information' onPress={updateConfirmation} disabled={newName == '' && newDescription == '' && newClue == '' || (newDescription == '' || newClue == '') && (huntLocation.description == '' && huntLocation.clue == '')}/>
-            </ScrollView>
-        </KeyboardAvoidingView>
-    )
-}
+                <Button title='Update Location Information' onPress={updateConfirmation} disabled={newName == '' && newDescription == '' && newClue == '' || (newDescription == '' || newClue == '') && (huntLocations[locationIndex].description == '' && huntLocations[locationIndex].clue == '')}/>
+            
+            
+
+            {/** need index for when this screen is switched to Above here is screen 0 (view == 0) below is anything needed for view == 1*/}
+            </KeyboardAvoidingView>
+            
+        
+    )}
+    // old stuff:

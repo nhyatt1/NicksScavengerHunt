@@ -78,7 +78,7 @@ export default function AuthenticationPage({navigation}){
             else{
                 console.log('user\'s token:', data.token);
                 dispatch(addToken(data.token));
-                navigation.replace('Hunts')
+                navigation.replace('Menu')
             }
             
         }

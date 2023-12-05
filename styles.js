@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
     flexDirection: "column"
     },
     dropdown: {
-        margin: 16,
+        margin: 5,
         height: 50,
         width: 250,
         backgroundColor: 'white',

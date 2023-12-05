@@ -13,24 +13,76 @@ export default function ConditionsPage({navigation, route}){
     const token = useSelector(state => state.token.tokens);
     const [Hunt, setHunt] = useState(route.params.hunt);
     const [myHunts, setMyHunts] = useState([]);
-    const [locationsArr, setLocationsArr] = useState([])
-    const [huntLocation, setHuntLocation] = useState(route.params.location);
+    // const [locationsArr, setLocationsArr] = useState([])
+    const [huntLocation] = useState(route.params.location);
+    const [huntLocations] = useState(route.params.huntLocations)
+    const [parentLocationIDS] = useState(route.params.parentLocationIDS)
     const isFocused = useIsFocused();
-    //conditions from getconditions should be taken as data.conditions[0]
-    const [huntConditions, setHuntConditions] = useState(route.params.conditions);
+    //conditions from getconditions should be taken as data.conditions
+    const [huntConditions, setHuntConditions] = useState([]);
     const [updateCheck, SetUpdateCheck] = useState(false);
-    const [newTime, SetNewTime] = useState();
+
     const [spinStart, setSpinStart] = useState(new Date());
     const [spinEnd, setSpinEnd] = useState(new Date());
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
-    const [requiredlocationid, setRequiredlocationid] = useState(route.params.requiredlocationid);
-    const [reqlocName, setReqLocName] = useState('loading...');
+    const [requiredlocationid, setRequiredlocationid] = useState('');
+    const [selectedCondition, setSelectedCondition] = useState(-1)
+    const [selectedConditionID, setSelectedConditionID] = useState(-1)
+
+    const[periodCondition, setPeriodCondition] = useState(false);
+    const[periodIndex, setPeriodIndex] = useState(0);
+
     const [view, setView] = useState(0);
+    const [updateScreen, setUpdateScreen] = useState(false);
     const [timePicker, setTimePicker] = useState(false);
     const [huntCheck, setHuntCheck] = useState(false);
     const [firstLoad, setFirstLoad] = useState(true);
     
+    const disableTime =() =>{
+        for (let i = 0; i < huntConditions.length; i++){
+            if (huntConditions[i].requiredlocationid == null){
+                return true;
+            }
+        }
+        return false;
+        // let dateInterference = false;
+        // //date must be HH:MM:SS format 24 hour
+        
+        // const [shours, sminutes, sseconds] = sTime.split(":").map(Number);
+        // const [ehours, eminutes, eseconds] = eTime.split(":").map(Number);
+        
+        // const sDateNew = new Date();
+        // dateObject.setHours(shours);
+        // dateObject.setMinutes(sminutes);
+        // dateObject.setSeconds(sseconds);
+
+        // const eDateNew = new Date();
+        // dateObject.setHours(ehours);
+        // dateObject.setMinutes(eminutes);
+        // dateObject.setSeconds(eseconds);
+        
+        // for (let i = 0; i < huntConditions; i++){
+        //     if (huntConditions[i].requiredlocationid != null){
+        //         continue;
+        //     }else{
+        //         const [oshours, osminutes, osseconds] =huntConditions[i].starttime.split(":").map(Number);
+        //         const [oehours, oeminutes, oeseconds] =huntConditions[i].endtime.split(":").map(Number);
+                
+        //         const sDateOld = new Date();
+        //         dateObject.setHours(oshours);
+        //         dateObject.setMinutes(osminutes);
+        //         dateObject.setSeconds(osseconds);
+
+        //         const eDateOld = new Date();
+        //         dateObject.setHours(oehours);
+        //         dateObject.setMinutes(oeminutes);
+        //         dateObject.setSeconds(oeseconds);
+
+        //     }
+
+        }
+
 
     const displayDate = (string) =>{
         const arr = string.split(':');
@@ -72,50 +124,56 @@ export default function ConditionsPage({navigation, route}){
       }, [navigation, dispatch]);
 
       useEffect(()=>{(async () => {
+        setSelectedCondition(-1);
+        setPeriodCondition(false);
+        // if (huntLocations.length == 0 || !(huntLocations.find(obj => String(obj.locationid) == String(requiredlocationid)))){
+        //     if (firstLoad == true){
 
-        if (locationsArr.length == 0 || !(locationsArr.find(obj => String(obj.locationid) == String(requiredlocationid)))){
-            if (firstLoad == true){
-
-            }else{
-                setRequiredlocationid('')
-            }
+        //     }else{
+        //         setRequiredlocationid('')
+        //     }
             
-        }
-        console.log('Fetching Hunt conditions... (useEffect1)')
-        console.log('Hunt:', Hunt)
-        console.log('huntLocation:', huntLocation)
-        console.log('current conditions:', huntConditions)
-        let formData = new FormData();
-        formData.append('locationid', huntLocation.locationid);
-        formData.append('token', token[0])
-        const response = await fetch('https://cpsc345sh.jayshaffstall.com/getConditions.php', {
-            method: 'POST',
-            body: formData
-        });
-        if(response.ok){
-            const data = await response.json()
-            console.log('Status:', data.status)
-            console.log('conditions data:', data);
-            if (data.status == "error"){
-                Alert.alert('Oops!', String(data.error), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-                return;
+        // }
+            console.log('Fetching Hunt conditions... (useEffect1)')
+            console.log('Hunt:', Hunt)
+            console.log('huntLocation:', huntLocation);
+            console.log('current conditions:', huntConditions)
+            let formData = new FormData();
+            formData.append('token', token[0]);
+            formData.append('locationid', huntLocation.locationid);
+            const response = await fetch('https://cpsc345sh.jayshaffstall.com/getConditions.php', {
+                method: 'POST',
+                body: formData
+            });
+            if(response.ok){
+                const data = await response.json()
+                console.log('Status:', data.status)
+                console.log('conditions data:', data);
+                if (data.status == "error"){
+                    Alert.alert('Oops!', String(data.error), [
+                        {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                    return;
+                }
+                else{
+                    console.log('data.conditions on cond screen:' , data.conditions)
+                    setHuntConditions(data.conditions);
+                    if (data.conditions[0] != null){
+                        let i = 0;
+                    for (let condition of data.conditions){
+                        if (condition.requiredlocationid == null){
+                            setPeriodCondition(true);
+                            setPeriodIndex(i)
+                        }
+                        i++;
+                    }
+                    }
+                }
             }
             else{
-                console.log('data.conditions:' , data.conditions)
-                setHuntConditions(data.conditions[0]);
-                if (data.conditions[0] == null){
-                    setView(0);
-                }
-
+                console.log("Error fetching data, status code: " + response.status)
+                Alert.alert('Oops! Something went wrong with "getConditions.php" from the API. Please try again, or come back another time.', String(response.status), [
+                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
             }
-        }
-        else{
-            console.log("Error fetching data, status code: " + response.status)
-            Alert.alert('Oops! Something went wrong with "getConditions.php" from the API. Please try again, or come back another time.', String(response.status), [
-                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-            
-        }
     })()},[isFocused, updateCheck]);
 
     useEffect(() => {
@@ -141,63 +199,63 @@ export default function ConditionsPage({navigation, route}){
                    
             }
             console.log('my hunts', myHunts);
-            setLocationsArr([]);
+            // setLocationsArr([]);
             let tempLA = [];
             console.log('load these hunts:', loadHunts);
             console.log('fetching locations of those hunts')
     })()
     }, [huntCheck]);
 
-    useEffect(() => {
-            console.log('conditions useEffect')
-            console.log('locationsArr', locationsArr)
-            let tempLocArr = [];
-            let i = 0;
-            myHunts.forEach(async (element) =>{
-                if (String(element.huntid) != String(Hunt.huntid)){
-                let newForm = new FormData();
-                newForm.append('token', token);
-                newForm.append('huntid', element.huntid);
+    // useEffect(() => {
+    //         console.log('conditions useEffect')
+    //         // console.log('locationsArr', locationsArr)
+    //         let tempLocArr = [];
+    //         let i = 0;
+    //         myHunts.forEach(async (element) =>{
+    //             if (String(element.huntid) != String(Hunt.huntid)){
+    //             let newForm = new FormData();
+    //             newForm.append('token', token);
+    //             newForm.append('huntid', element.huntid);
     
-                const response = await fetch('https://cpsc345sh.jayshaffstall.com/getHuntLocations.php', {
-                    method: 'POST',
-                    body: newForm
-                });
-                if (response.ok){
-                    const data = await response.json()
-                    if (data.status == "error"){
-                        Alert.alert('Oops!', String(data.error), [
-                            {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-                        return;
-                    }else{
-                        console.log('current element name', element.name)
-                        console.log('data.locations:' , data.locations)
-                        if(data.locations[0] != null){
-                            tempLocArr.push(data.locations[0])
-                            console.log("temp loc arr", i, tempLocArr)
-                            console.log('requiredlocationid from route:', requiredlocationid)
-                            if(String(data.locations[0].locationid) == String(requiredlocationid)){
-                                console.log('this events id is the same as requiredlocationid:', String(data.locations[0].locationid) == String(requiredlocationid))
-                                setReqLocName(String(data.locations[0].name))
-                            }
-                        }
-                    }
-                }
-                else{
-                    console.log("Error fetching data, status code: " + response.status)
-                    Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(response.status), [
-                        {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+    //             const response = await fetch('https://cpsc345sh.jayshaffstall.com/getHuntLocations.php', {
+    //                 method: 'POST',
+    //                 body: newForm
+    //             });
+    //             if (response.ok){
+    //                 const data = await response.json()
+    //                 if (data.status == "error"){
+    //                     Alert.alert('Oops!', String(data.error), [
+    //                         {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+    //                     return;
+    //                 }else{
+    //                     console.log('current element name', element.name)
+    //                     console.log('data.locations:' , data.locations)
+    //                     if(data.locations[0] != null){
+    //                         tempLocArr.push(data.locations[0])
+    //                         console.log("temp loc arr", i, tempLocArr)
+    //                         console.log('requiredlocationid from route:', requiredlocationid)
+    //                         if(String(data.locations[0].locationid) == String(requiredlocationid)){
+    //                             console.log('this events id is the same as requiredlocationid:', String(data.locations[0].locationid) == String(requiredlocationid))
+    //                             setReqLocName(String(data.locations[0].name))
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //             else{
+    //                 console.log("Error fetching data, status code: " + response.status)
+    //                 Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(response.status), [
+    //                     {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
                     
-                }i++
-            }
-            })
-            setLocationsArr(tempLocArr);
+    //             }i++
+    //         }
+    //         })
+    //         // setLocationsArr(tempLocArr);
 
-    }, [huntConditions, myHunts]);
+    // }, [huntConditions, myHunts]);
 
     const handleLocationPress = async (name, value) =>{
         Alert.alert('ARE YOU SURE?', "You are choosing the location \'" + name + "' as the required location", [
-            {text: 'Confirm', onPress:async() => {huntConditions == null? addCondition(value) : updateCondition(value);}},
+            {text: 'Confirm', onPress:async() => {updateScreen == true? updateCondition(value) : addCondition(value)}},
             {text: 'Cancel', onPress:()=>{console.log('cancelled')}, style: 'cancel'}]);
     }
 
@@ -245,10 +303,10 @@ export default function ConditionsPage({navigation, route}){
         }
     }
     const updateCondition = async(value)=>{
-        console.log('update entered')
+        console.log('update entered for condition:', selectedCondition)
         let formData = new FormData();
         formData.append('token', token);
-        formData.append('conditionid', huntConditions.conditionid);
+        formData.append('conditionid', selectedConditionID);
         if(value == ''){
             console.log('reqloq is empty, adding times')
             formData.append('starttime', startTime);
@@ -279,6 +337,9 @@ export default function ConditionsPage({navigation, route}){
                 setFirstLoad(false);
                 setView(0);
                 setRequiredlocationid(value);
+                setUpdateScreen(false);
+                setSelectedCondition(-1);
+                setSelectedConditionID(-1);
             }   
         }
         else{
@@ -290,7 +351,7 @@ export default function ConditionsPage({navigation, route}){
     }
 
     const deleteConfirmation = () =>
-    Alert.alert('ARE YOU SURE?', 'If you delete this Condition, you will have to set it again.', [
+    Alert.alert('ARE YOU SURE?', 'If you delete this Condition, (' + selectedCondition + '), you will have to set it again.', [
         {text: 'Confirm', onPress:async() => {deleteCondition()}},
         {text: 'Cancel', onPress:()=>{console.log('Cancel Pressed')}, style: 'cancel'}
     ]);
@@ -298,7 +359,7 @@ export default function ConditionsPage({navigation, route}){
         console.log('Deleting Hunt...');
         let formData = new FormData();
         formData.append('token', token[0]);
-        formData.append('conditionid', huntConditions.conditionid);
+        formData.append('conditionid', selectedConditionID);
         const result = await fetch('https://cpsc345sh.jayshaffstall.com/deleteCondition.php', {
             method: 'POST',
             body: formData
@@ -320,6 +381,9 @@ export default function ConditionsPage({navigation, route}){
                 setFirstLoad(false);
                 //
                 setHuntCheck(!huntCheck);
+                setUpdateScreen(false);
+                setSelectedCondition(-1);
+                setSelectedConditionID(-1);
                 //updates hunt array (not rlly necesary/????)
                 setView(0);
             }   
@@ -336,16 +400,31 @@ export default function ConditionsPage({navigation, route}){
         <KeyboardAvoidingView style={styles.container}>
             {view == 0? 
             <>
-            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
-                Current Hunt: <Text style={{fontSize: 25, fontWeight: '200'}}>{Hunt.name}</Text>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
+                Location: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocation.name}</Text>
             </Text>
             <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
-                Condition type: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null?  "None, press ONE of the options below (editable later):": huntConditions.starttime == null && huntConditions.endtime == null? "Required Location": "Visibility Time Interval"}</Text>
+                Conditions:
             </Text>
-            {huntConditions == null?
-            <></>
-            :
-            huntConditions.starttime == null && huntConditions.endtime == null?
+            <View style={{height:200, width: 250, alignContent: 'center'}}>
+            <FlatList
+                    style={{marginTop: 10, alignContent: 'center'}}
+                    data = {huntConditions}
+                    renderItem ={({item, index}) => (
+                    <TouchableOpacity
+                        onPress={ () => {console.log('condition pressed', index + 1, item.conditionid, huntConditions[index]);setSelectedCondition(index);setSelectedConditionID(item.conditionid);setUpdateScreen(true);}}> 
+                        <View>
+                            <Text style={{fontSize: 20, marginTop: 10, marginBottom: 10, textAlign:'center'}}>
+                                {index}: {item.requiredlocationid == null? "Start: " + displayDate(item.starttime) +"\nEnd: " + displayDate(item.endtime):"Required location: " + (huntLocations.find((element) => element.locationid == item.requiredlocationid))? (huntLocations.find((element) => element.locationid == item.requiredlocationid)).name: ""}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>   
+                )}
+                keyExtractor={(item, index) => index}
+                />
+            </View>
+            
+            {/* {huntConditions.starttime == null && huntConditions.endtime == null?
                 <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
                     Required Location Name: <Text style={{fontSize: 25, fontWeight: '200'}}>{reqlocName}</Text>{'\n'}Required Location ID: <Text style={{fontSize: 25, fontWeight: '200'}}>{requiredlocationid}</Text>
                 </Text>
@@ -353,42 +432,73 @@ export default function ConditionsPage({navigation, route}){
                 <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
                     Start Time: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null? "":displayDate(huntConditions.starttime) +"\n" +"(" +huntConditions.starttime+ " UTC)" }</Text>{"\n"}End Time: <Text style={{fontSize: 25, fontWeight: '200'}}>: {huntConditions == null? "":displayDate(huntConditions.endtime) +"\n" +"(" +huntConditions.endtime + " UTC)" }</Text>
                 </Text>
-            }
+            } */}
             
             
-            
-            {huntConditions == null?
-            <>
-                
-            </>
-            :
-            <>
+            {huntConditions.length > 0? 
             <Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginBottom: 10}}>
-                Want to update your condition? Select one of the options below
+                {selectedCondition == -1? "Select one of your conditions to update or delete it. Add more conditions below.":<TouchableOpacity onPress={()=>{setUpdateScreen(false);setSelectedCondition(-1);setSelectedConditionID(-1);}}><Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginBottom: 10}}>Select one of the options below to update this condition ({selectedCondition}) with. (Tap this to deselect)</Text></TouchableOpacity>}
+            </Text>:<Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginBottom: 10}}>
+                Select one of the options below to add a condition of that type.
+            </Text>}
+            
+            
+        {disableTime() == true?
+        <>
+        <TouchableOpacity onPress={()=>{setView(1)}}>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:10}}>
+                Option 1:{"\n"}Require user to have previously visited a separate location 
             </Text>
-            </>
+        </TouchableOpacity>
+        {periodCondition == false?
+        <>
+        <TouchableOpacity onPress={()=>{setTimePicker(true);setView(1);console.log('viewing timepicker')}}>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:10}}>
+                Option 2: {"\n"}Set a time Period of visibility that the location is available
+            </Text>
+        </TouchableOpacity>
+        </>
+        :
+        
+        <>
+        {selectedCondition == periodIndex? 
+        <TouchableOpacity onPress={()=>{setTimePicker(true);setView(1);console.log('viewing timepicker')}}>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:10}}>
+                Option 2: {"\n"}Set a time Period of visibility that the location is available
+            </Text>
+        </TouchableOpacity>
+        :
+        <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:10}}>
+                Option 2 DISABLED:{"\n"}You can only have one start and end time.
+        </Text>
+
+    }
+        </>
+        }
+        </>
+        :
+        <>
+        <TouchableOpacity onPress={()=>{setView(1)}}>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:10}}>
+                Option 1:{"\n"}Require user to have previously visited a separate location 
+            </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={()=>{setTimePicker(true);setView(1);console.log('viewing timepicker')}}>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:10}}>
+                Option 2: {"\n"}Set a time Period of visibility that the location is available
+            </Text>
+        </TouchableOpacity>
+        </>
+
             }
-            <TouchableOpacity onPress={()=>{setView(1)}}>
-                <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:10}}>
-                    Option 1:{"\n"} Require user to have previously visited a separate location 
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={()=>{setTimePicker(true);setView(1);console.log('nickypoo', startTime, endTime)}}>
-                <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:10}}>
-                    Option 2: {"\n"} Set a time Period of visibility that the location is available
-                </Text>
-            </TouchableOpacity>
             
             
-            {huntConditions == null? 
-            <>
-            </>
-            :
-            <>
-            <AntDesign.Button backgroundColor='#FF0000' disabled={huntConditions == null} name='delete' onPress={deleteConfirmation}>
+            
+            
+            <AntDesign.Button backgroundColor={updateScreen == false? '#FFFFFF':'#FF0000'} disabled={updateScreen == false} name='delete' onPress={deleteConfirmation}>
                 Delete this Condition?
             </AntDesign.Button>
-            </>}
+            
             </>
             :
             <>
@@ -434,23 +544,35 @@ export default function ConditionsPage({navigation, route}){
                         minutes = String(date.getUTCMinutes());
                     }
                     console.log('End Time UTC:', hours + ':' + minutes + ':00');setEndTime(hours + ':' + minutes + ':00')}}/>
-                <AntDesign.Button name='check' color={startTime ==''|| endTime ==''?'#808080' :'#ffffff'} disabled={startTime ==''|| endTime ==''} backgroundColor={startTime ==''|| endTime ==''? '#FF0000':'#00FF00'} onPress={async() => {setTimePicker(false);huntConditions==null? addCondition(''):updateCondition('')}}>Confirm Times</AntDesign.Button>
+                <AntDesign.Button name='check' color={startTime ==''|| endTime ==''?'#808080' :'#ffffff'} 
+                disabled={startTime ==''|| endTime ==''|| updateScreen == true? false:disableTime()} backgroundColor={startTime ==''|| endTime ==''? '#FF0000':'#00FF00'} 
+                onPress={async() => {setTimePicker(false); 
+                if(updateScreen == true){
+                    console.log('updatescreen true')
+                    updateCondition('')
+                }else{
+                    console.log('updatescreen false')
+                    addCondition('');
+                }}}>Confirm Times</AntDesign.Button>
             </>
             :
             <>
             <AntDesign.Button name='back' onPress={()=>{setHuntCheck(!huntCheck);setView(0);}}>Go Back</AntDesign.Button>
-            {locationsArr.length > 0 ?
+            {huntLocations.length > 1 ?
             <>
             <Text style={{fontSize: 25, fontWeight: '200', textAlign:'center'}}>
-                    Here is a scrollable list of all of your other locations:{locationsArr.length == 1 && parseInt(locationsArr[0].locationid) == parseInt(requiredlocationid)? <Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center'}}>{"\n"}See nothing? Your only other location is already your requirement</Text> : <>""</>}
+                    Here is a scrollable list of all of your available locations:
             </Text>
             <View style={{height:300, width: 250, alignContent: 'center'}}>
                 <FlatList
                     style={{marginTop: 10, alignContent: 'center'}}
-                    data = {locationsArr}
-                    renderItem ={({item}) => (
+                    data = {huntLocations}
+                    renderItem ={({item, index}) => (
                         <>
-                        {String(item.locationid) == String(requiredlocationid)? <></>:
+                        {parseFloat(item.locationid) == parseFloat(huntLocation.locationid) || (huntConditions.find((element)=>element.requiredlocationid == parseFloat(item.locationid))) || parentLocationIDS.find(element => parseFloat(element) == parseFloat(item.locationid)) ?
+                        <>
+                        </>
+                        :
                         <TouchableOpacity
                         onPress={ () => { {handleLocationPress(item.name, item.locationid); console.log('Location Pressed', item.locationid)}} }> 
                         <View>
@@ -459,14 +581,14 @@ export default function ConditionsPage({navigation, route}){
                             </Text>
                         </View>
                         </TouchableOpacity>  
-                        } 
-                        </>  
+                        }
+                        </> 
                     )}
                     keyExtractor={(item, index) => index}
                 />
             </View>
             <Text style={{fontSize: 25, fontWeight: '200', textAlign:'center'}}>
-                Tap on the location you want to make your current location's prerequisite condition.
+                Tap on the location you want to make your current location's prerequisite condition{"\n"}<Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>(Unavailable ones include: the current location, locations that have your current location as a prerequisite, and locations you already have as prerequisites.)</Text>
             </Text>
             </>
             :
@@ -477,7 +599,7 @@ export default function ConditionsPage({navigation, route}){
             </>}
             </>}
             </>}
-            
+             
         </KeyboardAvoidingView>
     )
 }

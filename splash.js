@@ -25,7 +25,7 @@ export default function SplashPage({navigation}) {
                     navigation.replace('Authentication')
                 }
                 else{
-                    navigation.replace('Hunts')
+                    navigation.replace('Menu')
                 }
             }
             else{

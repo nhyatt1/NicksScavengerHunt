@@ -28,7 +28,14 @@
         "bundler": "metro"
       },
       "plugins": [
-        "expo-localization"
+        "expo-localization",
+        [
+          "expo-location",
+          {
+          "locationAlwaysAndWhenInUsePermission": "Allow ScavengerHuntApp to use your Location"
+          }
+          ]
+          
       ]
     }
   }

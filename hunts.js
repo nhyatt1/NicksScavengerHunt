@@ -12,117 +12,117 @@ export default function HuntsPage({navigation}){
     const [newHunt, setNewHunt] = useState('')
     const [myHunts, setMyHunts] = useState([])
     const [buttonPressed, setButtonPressed] = useState(false);
-    const [locationsArr, setLocationsArr] = useState([]);
+    // const [locationsArr, setLocationsArr] = useState([]);
     const [conditionsArr, setConditionsArr] = useState([]);
     const isFocused = useIsFocused();
     //!(locationsArr.find(obj => String(obj.locationid) == String(requiredlocationid))) need to implement
 
-    useEffect(() => {
-        if (myHunts.length == 0){
-            return;
-        }
-        (async () => {
-        console.log('locations useEffect')
-        console.log('locationsArr', locationsArr)
-        let tempLocArr = [];
-        let i = 0;
-        let z = myHunts.length;
+    // useEffect(() => {
+    //     if (myHunts.length == 0){
+    //         return;
+    //     }
+    //     (async () => {
+    //     console.log('locations useEffect')
+    //     console.log('locationsArr', locationsArr)
+    //     let tempLocArr = [];
+    //     let i = 0;
+    //     let z = myHunts.length;
 
-        myHunts.forEach(async (element) =>{
-            let newForm = new FormData();
-            newForm.append('token', token);
-            newForm.append('huntid', element.huntid);
+    //     myHunts.forEach(async (element) =>{
+    //         let newForm = new FormData();
+    //         newForm.append('token', token);
+    //         newForm.append('huntid', element.huntid);
 
-            const response = await fetch('https://cpsc345sh.jayshaffstall.com/getHuntLocations.php', {
-                method: 'POST',
-                body: newForm
-            });
-            if (response.ok){
-                const data = await response.json()
-                if (data.status == "error"){
-                    Alert.alert('Oops!', String(data.error), [
-                        {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-                    return;
-                }else{
-                    console.log('current element name', element.name)
-                    console.log('data.locations:' , data.locations)
-                    if(data.locations[0] != null){
-                        tempLocArr.push(data.locations[0])
-                        console.log("temp loc arr", i, tempLocArr)
-                        if (i == z - 1){
-                            console.log('i == z-1')
-                            setLocationsArr(tempLocArr);
-                        }
+    //         const response = await fetch('https://cpsc345sh.jayshaffstall.com/getHuntLocations.php', {
+    //             method: 'POST',
+    //             body: newForm
+    //         });
+    //         if (response.ok){
+    //             const data = await response.json()
+    //             if (data.status == "error"){
+    //                 Alert.alert('Oops!', String(data.error), [
+    //                     {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+    //                 return;
+    //             }else{
+    //                 console.log('current element name', element.name)
+    //                 console.log('data.locations:' , data.locations)
+    //                 if(data.locations[0] != null){
+    //                     tempLocArr.push(data.locations[0])
+    //                     console.log("temp loc arr", i, tempLocArr)
+    //                     if (i == z - 1){
+    //                         console.log('i == z-1')
+    //                         setLocationsArr(tempLocArr);
+    //                     }
                         
-                        // if(String(data.locations[0].locationid) == String(requiredlocationid)){
-                        //     console.log('this events id is the same as requiredlocationid:', String(data.locations[0].locationid) == String(requiredlocationid))
+    //                     // if(String(data.locations[0].locationid) == String(requiredlocationid)){
+    //                     //     console.log('this events id is the same as requiredlocationid:', String(data.locations[0].locationid) == String(requiredlocationid))
 
-                        // }
-                    }
-                }
-            }
-            else{
-                console.log("Error fetching data, status code: " + response.status)
-                Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(response.status), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-            }i++
-        })})()
-    }, [myHunts]);
+    //                     // }
+    //                 }
+    //             }
+    //         }
+    //         else{
+    //             console.log("Error fetching data, status code: " + response.status)
+    //             Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(response.status), [
+    //                 {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+    //         }i++
+    //     })})()
+    // }, [myHunts]);
         
-    useEffect(() => {
-        (async () => {
-        let tempCondArr = [];
-        let i = 0;
+    // useEffect(() => {
+    //     (async () => {
+    //     let tempCondArr = [];
+    //     let i = 0;
   
-        for (i; i< locationsArr.length; i++){
-            console.log('secondForEach: locationsArr', locationsArr, locationsArr[i], locationsArr[i].locationid)
+    //     for (i; i< locationsArr.length; i++){
+    //         console.log('second for loop: locationsArr', locationsArr, locationsArr[i], locationsArr[i].locationid)
             
-            let formData = new FormData();
-            formData.append('token', token);
-            formData.append('locationid', locationsArr[i].locationid);
+    //         let formData = new FormData();
+    //         formData.append('token', token);
+    //         formData.append('locationid', locationsArr[i].locationid);
 
-            const result = await fetch('https://cpsc345sh.jayshaffstall.com/getConditions.php', {
-                method: 'POST',
-                body: formData
-            });
-            if (result.ok){
-                const data = await result.json();
-                if (data.status == "error"){
-                    Alert.alert('Oops!', String(data.error), [
-                        {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-                    return;
-                }else{
-                    console.log('current element name', locationsArr[i].name)
-                    console.log('data.conditions:' , data.conditions)
-                    if(data.conditions[0] != null){
-                        if (data.conditions[0].requiredlocationid == null){
-                            console.log("temp loc arr after condition is a time interval", i, tempCondArr)
-                        }else{
-                            tempCondArr.push(data.conditions[0].requiredlocationid)
-                            console.log("temp loc arr", i, tempCondArr)
-                            setConditionsArr(tempCondArr);
-                        }
+    //         const result = await fetch('https://cpsc345sh.jayshaffstall.com/getConditions.php', {
+    //             method: 'POST',
+    //             body: formData
+    //         });
+    //         if (result.ok){
+    //             const data = await result.json();
+    //             if (data.status == "error"){
+    //                 Alert.alert('Oops!', String(data.error), [
+    //                     {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+    //                 return;
+    //             }else{
+    //                 console.log('current element name', locationsArr[i].name)
+    //                 console.log('data.conditions:' , data.conditions)
+    //                 if(data.conditions[0] != null){
+    //                     if (data.conditions[0].requiredlocationid == null){
+    //                         console.log("temp loc arr after condition is a time interval", i, tempCondArr)
+    //                     }else{
+    //                         tempCondArr.push(data.conditions[0].requiredlocationid)
+    //                         console.log("temp loc arr", i, tempCondArr)
+    //                         setConditionsArr(tempCondArr);
+    //                     }
                         
-                        // if(String(data.locations[0].locationid) == String(requiredlocationid)){
-                        //     console.log('this events id is the same as requiredlocationid:', String(data.locations[0].locationid) == String(requiredlocationid))
+    //                     // if(String(data.locations[0].locationid) == String(requiredlocationid)){
+    //                     //     console.log('this events id is the same as requiredlocationid:', String(data.locations[0].locationid) == String(requiredlocationid))
 
-                        // }
-                    }
-                }
-            }
-            else{
-                console.log("Error fetching data, status code: " + result.status)
-                Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-            }
-        }
-        console.log("tempCondArr length:", tempCondArr.length)
-        if (tempCondArr.length == 0){
-            console.log('length == 0')
-            setConditionsArr([])
-        }
-    })()
-    }, [locationsArr, isFocused]);
+    //                     // }
+    //                 }
+    //             }
+    //         }
+    //         else{
+    //             console.log("Error fetching data, status code: " + result.status)
+    //             Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
+    //                 {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+    //         }
+    //     }
+    //     console.log("tempCondArr length:", tempCondArr.length)
+    //     if (tempCondArr.length == 0){
+    //         console.log('length == 0')
+    //         setConditionsArr([])
+    //     }
+    // })()
+    // }, [locationsArr, isFocused]);
 
 
 
@@ -215,7 +215,7 @@ export default function HuntsPage({navigation}){
                     data = {myHunts}
                     renderItem ={({item}) => (
                     <TouchableOpacity
-                        onPress={ () => {setButtonPressed(!buttonPressed); {navigation.navigate('Details', {hunt: item, locationIsRequired: conditionsArr}); console.log('Hunt Pressed', item), console.log('conditions Arr on press:', conditionsArr)}} }> 
+                        onPress={ () => {setButtonPressed(!buttonPressed); {navigation.navigate('Details', {hunt: item}); console.log('Hunt Pressed', item), console.log('conditions Arr on press:', conditionsArr)}} }> 
                         <View>
                             <Text style={{fontSize: 20, marginTop: 10, marginBottom: 10, textAlign:'center'}}>
                                 Hunt: {item.name}
