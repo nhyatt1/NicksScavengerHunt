@@ -1,5 +1,5 @@
-import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView, TouchableOpacity } from "react-native"
-import { useEffect, useState, useRef } from "react"
+import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView, TouchableOpacity, ScrollView } from "react-native"
+import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { styles } from "./styles.js";
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -8,30 +8,30 @@ import { Marker } from 'react-native-maps';
 import { removeToken } from "./slices.js";
 
 
+
 export default function LocationPage({navigation, route}){
     const dispatch = useDispatch();
     const token = useSelector(state => state.token.tokens);
     
-    const [Hunt, setHunt] = useState(route.params.hunt);
+    const [Hunt] = useState(route.params.hunt);
     const [huntLocations, setHuntLocations] = useState(route.params.huntLocations);
     const [locationIndex] = useState(route.params.locationIndex);
     
-    const [requiredLocationIDS, setRequiredLocationIDS] = useState(route.params.requiredLocationIDS);
+    const [requiredLocationIDS] = useState(route.params.requiredLocationIDS);
     const [locationIsRequired, setLocationIsRequired] = useState(false);
     const [parentLocationIDS, setParentLocationIDS] = useState([]);
 
     const [newLatitude, setNewLatitude] = useState('');
     const [newLongitude, setNewLongitude] = useState('')
 
-    const [newLocation, setNewLocation] = useState('')
-
     const [newName, setNewName] = useState('');
     const [newClue, setNewClue] = useState('');
     const [newDescription, setNewDescription] = useState('');
 
     const [updateCheck, SetUpdateCheck] = useState(false);
-    // const regionRef = useRef();
-    // regionRef.current = region;
+
+  
+
     const [region, setRegion] = useState({
             latitude: route.params.huntLocations[route.params.locationIndex].latitude,
             longitude: route.params.huntLocations[route.params.locationIndex].longitude,
@@ -63,15 +63,6 @@ export default function LocationPage({navigation, route}){
                 console.log("locations to be:", data.locations);
                 console.log('previous locations: ', huntLocations)
                 
-                // console.log("typeoflocationreqid:", typeof route.params.locationIsRequired[0], route.params.locationIsRequired[0])
-                // console.log("typeof data locid:", typeof data.locations[0].locationid, data.locations[0].locationid)
-                // console.log(route.params.locationIsRequired.find(element => element == data.locations[0].locationid))
-                // if(route.params.locationIsRequired.find(element => element == data.locations[0].locationid) != null){
-                //     console.log('true')
-                //     setLocationIsRequired(true);
-                // }else{
-                //     console.log('false')
-                // }
                 setHuntLocations(data.locations);
             }
             else{
@@ -83,7 +74,6 @@ export default function LocationPage({navigation, route}){
     
     useEffect(() => {
         navigation.setOptions({
-          title: 'Location Details',
           headerRight: () => (
             <Button
               onPress={() => {
@@ -187,7 +177,7 @@ export default function LocationPage({navigation, route}){
             }
             else{
                 console.log('update success')
-                // do something to refresh page (set view 0 maybe?)
+                // do something to refresh page
                 SetUpdateCheck(!updateCheck);
                 setNewName('');
                 setNewClue('');
@@ -219,13 +209,8 @@ export default function LocationPage({navigation, route}){
         console.log('Deleting Location...')
         let formData = new FormData();
         formData.append('token', token[0]);
-        //need index.
         formData.append('locationid', huntLocations[locationIndex].locationid);
 
-        //Need to edit this:
-        // {This will return an error if there is another location that
-        //     has a condition depending on this location. The other location's condition must be deleted first
-        //     to avoid breaking the overall hunt.}
         const result = await fetch('https://cpsc345sh.jayshaffstall.com/deleteHuntLocation.php', {
             method: 'POST',
             body: formData
@@ -253,8 +238,10 @@ export default function LocationPage({navigation, route}){
     
     return(
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container} keyboardVerticalOffset={150}>
+            <ScrollView>
+            <View style={{ width: 250, height: 200, alignSelf:'center', alignContent:'center', justifyContent: 'center', marginTop: 10}}>
             <MapView 
-                style={{ height: '25%', width: '50%'}}
+                style={{ height: '100%', width: '100%', alignSelf:'center'}}
                 initialRegion={region}
                 maxZoomLevel={14}
                 minZoomLevel={14}
@@ -268,20 +255,29 @@ export default function LocationPage({navigation, route}){
                 coordinate={region}
                 />
             </MapView>
-                <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center'}}>
-                    Location Name: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocations[locationIndex].name}{'\n'}</Text>Description: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocations[locationIndex].description == ''? 'None' : huntLocations[locationIndex].description}{"\n"}</Text>Clue: <Text style={{fontSize: 20, fontWeight: '200'}}>{huntLocations[locationIndex].clue == ''? 'None' : huntLocations[locationIndex].clue}</Text>
-                </Text>
-                <TouchableOpacity
-                        onPress={ () => {{navigation.navigate('Conditions', {hunt: Hunt, location: huntLocations[locationIndex], huntLocations: huntLocations, parentLocationIDS: parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index)}); setParentLocationIDS(parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index));console.log('condit presed', parentLocationIDS)}}}> 
-                <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center'}}>
-                    Conditions: <Text style={{fontSize: 20, fontWeight: '200'}}>Tap here to see the conditions of this location.</Text>
+            </View>
+            <View style={styles.container}>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
+                Location Name: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocations[locationIndex].name}{'\n'}</Text>Description: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocations[locationIndex].description == ''? 'None' : huntLocations[locationIndex].description}{"\n"}</Text>Clue: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocations[locationIndex].clue == ''? 'None' : huntLocations[locationIndex].clue}</Text>
+            </Text>
+            <TouchableOpacity
+                        onPress={ () => {{navigation.navigate('Conditions', {hunt: Hunt, location: huntLocations[locationIndex], huntLocations: huntLocations, parentLocationIDS: parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index)}); setParentLocationIDS(parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index)); setNewClue(''); setNewDescription(''); setNewName(''); setNewLongitude(''); setNewLatitude('');console.log('condit presed', parentLocationIDS)}}}> 
+                <Text style={{fontSize: 25, fontWeight: '600', textAlign:'center',marginTop:30, marginBottom:30}}>
+                    Tap here to see the conditions of this location.
                 </Text>
             </TouchableOpacity>
-                <AntDesign.Button name='delete' backgroundColor={'#FF0000'} onPress={deleteConfirmation}>Delete this Location?</AntDesign.Button>
-                        
-                    <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center'}}>
-                        Update the coordinates of your Hunt's position Here (cannot be 0, 0):
-                    </Text>
+            <AntDesign.Button name='delete' backgroundColor={'#FF0000'} onPress={deleteConfirmation}>Delete this Location?</AntDesign.Button>
+            </View>
+
+            
+            
+            
+            <View style={styles.container}>
+            <Text style={{fontSize: 25, fontWeight: '600', textAlign:'center', marginBottom:20}}>
+                        Update the coordinates of your Hunt's position here:
+            </Text>
+            <Text style={{fontSize: 25, fontWeight: '200', textAlign:'center', marginBottom:20}}>(New location cannot be 0, 0; you will not see the marker on the map)</Text>
+            
                        
                         <View style={{flexDirection:'row'}}>
                         <AntDesign.Button name='minussquareo' color='black' backgroundColor='white'
@@ -291,7 +287,7 @@ export default function LocationPage({navigation, route}){
                                 setNewLatitude('-' + newLatitude)
                             }
                         }}/>
-                            <TextInput value={newLatitude} keyboardType='decimal-pad' onChangeText={text => setNewLatitude(text)} maxlength={255} style={{width: 250, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' textAlign='center' placeholder='Enter a new Latitude:'/>
+                            <TextInput value={newLatitude} keyboardType='decimal-pad' onChangeText={text => setNewLatitude(text)} maxlength={255} style={{width: 250, height: 30, backgroundColor: '#D3D3D3', marginBottom: 10}} placeholderTextColor='#000000' textAlign='center' placeholder='Enter a new Latitude:'/>
                         </View>
                         <View style={{flexDirection:'row'}}>
                         <AntDesign.Button name='minussquareo' color='black' backgroundColor='white'
@@ -301,23 +297,19 @@ export default function LocationPage({navigation, route}){
                                 setNewLongitude('-' + newLongitude)
                             }
                         }}/>
-                            <TextInput value={newLongitude} keyboardType='decimal-pad' onChangeText={text => setNewLongitude(text)} maxlength={255} style={{width: 250, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' textAlign='center' placeholder='Enter a new Longitude:'/>
+                            <TextInput value={newLongitude} keyboardType='decimal-pad' onChangeText={text => setNewLongitude(text)} maxlength={255} style={{width: 250, height: 30, backgroundColor: '#D3D3D3', marginBottom: 20}} placeholderTextColor='#000000' textAlign='center' placeholder='Enter a new Longitude:'/>
                         </View>
-                    <Button title='Update the position' onPress={setLocationPosition} disabled={((newLatitude != '')? !(parseFloat(newLatitude) >= -90 && parseFloat(newLatitude) <= 90) : newLatitude =='')|| ((newLongitude != '')?  !(parseFloat(newLongitude) >= -180 && parseFloat(newLongitude) <= 180) : newLongitude =='')||(newLatitude == parseFloat(0) && newLongitude == parseFloat(0))}/>
-
-                <Text style={{fontSize: 20, fontWeight: '400', textAlign:'center', marginTop: 10}}>
+                    <AntDesign.Button name='upload' onPress={setLocationPosition} disabled={((newLatitude != '')? !(parseFloat(newLatitude) >= -90 && parseFloat(newLatitude) <= 90) : newLatitude =='')|| ((newLongitude != '')?  !(parseFloat(newLongitude) >= -180 && parseFloat(newLongitude) <= 180) : newLongitude =='')||(newLatitude == parseFloat(0) && newLongitude == parseFloat(0))} backgroundColor={(((newLatitude != '')? !(parseFloat(newLatitude) >= -90 && parseFloat(newLatitude) <= 90) : newLatitude =='')|| ((newLongitude != '')?  !(parseFloat(newLongitude) >= -180 && parseFloat(newLongitude) <= 180) : newLongitude =='')||(newLatitude == parseFloat(0) && newLongitude == parseFloat(0)))? 'grey':'#077AFF'}>Update the position</AntDesign.Button>
+                </View>
+            <View style={styles.container}>
+                <Text style={{fontSize: 25, fontWeight: '600', textAlign:'center', marginTop: 20, marginBottom:20}}>
                     {huntLocations[locationIndex].description == '' & huntLocations[locationIndex].clue == ''? "Please enter a description and Clue for this Location" : "Update the location here:"}
                 </Text>
-                <TextInput value={newName} onChangeText={text => setNewName(text)} maxlength={255} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new location name (optional):'/>
-                <TextInput value={newDescription} onChangeText={text => setNewDescription(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Update the location description:'/>
-                <TextInput value={newClue} onChangeText={text => setNewClue(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 5}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Update the location clue:'/>
-                <Button title='Update Location Information' onPress={updateConfirmation} disabled={newName == '' && newDescription == '' && newClue == '' || (newDescription == '' || newClue == '') && (huntLocations[locationIndex].description == '' && huntLocations[locationIndex].clue == '')}/>
-            
-            
-
-            {/** need index for when this screen is switched to Above here is screen 0 (view == 0) below is anything needed for view == 1*/}
-            </KeyboardAvoidingView>
-            
-        
+                <TextInput value={newName} onChangeText={text => setNewName(text)} maxlength={255} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 10}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new location name (optional):'/>
+                <TextInput value={newDescription} onChangeText={text => setNewDescription(text)} maxlength={255} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 10}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Update the location description:'/>
+                <TextInput value={newClue} onChangeText={text => setNewClue(text)} maxlength={255} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom: 20}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Update the location clue:'/>
+                <AntDesign.Button name='upload' onPress={updateConfirmation} disabled={(newName == '' && newDescription == '' && newClue == '' || (newDescription == '' || newClue == '') && (huntLocations[locationIndex].description == '' && huntLocations[locationIndex].clue == ''))} backgroundColor={(newName == '' && newDescription == '' && newClue == '' || (newDescription == '' || newClue == '') && (huntLocations[locationIndex].description == '' && huntLocations[locationIndex].clue == ''))? 'grey':'#077AFF'}>Update Location Information</AntDesign.Button>
+            </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
     )}
-    // old stuff:

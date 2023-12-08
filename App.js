@@ -12,6 +12,9 @@ import HuntsPage from './hunts.js';
 import DetailsPage from './details.js';
 import LocationPage from './location.js';
 import ConditionsPage from './conditions.js';
+import FindHunts from './find.js';
+import PlayHunts from './play.js';
+import LocationClue from './clue.js';
 
 const persistor = persistStore(store)
 const Stack = createNativeStackNavigator()
@@ -62,6 +65,16 @@ export default function App() {
               name="Find Hunts"
               component={FindHunts}
               options={{title: 'Find Hunts'}}
+            />
+            <Stack.Screen
+              name="Play Hunts"
+              component={PlayHunts}
+              options={{title: 'Play Hunts'}}
+            />
+            <Stack.Screen
+              name="Location Clue"
+              component={LocationClue}
+              options={{title: 'Location Clue'}}
             />
           </Stack.Navigator>
         </NavigationContainer>

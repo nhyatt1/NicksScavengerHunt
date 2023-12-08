@@ -1,17 +1,16 @@
-import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView, TouchableOpacity, FlatList } from "react-native"
-import { useEffect, useState, useRef } from "react"
+import { View, Text, Button, Alert, KeyboardAvoidingView, TouchableOpacity, FlatList } from "react-native"
+import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { styles } from "./styles.js";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { removeToken } from "./slices.js";
 import { useIsFocused } from "@react-navigation/native"
-import DateTimePicker from '@react-native-community/datetimepicker';
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 
 export default function ConditionsPage({navigation, route}){  
     const dispatch = useDispatch();
     const token = useSelector(state => state.token.tokens);
-    const [Hunt, setHunt] = useState(route.params.hunt);
+    const [Hunt] = useState(route.params.hunt);
     const [myHunts, setMyHunts] = useState([]);
     // const [locationsArr, setLocationsArr] = useState([])
     const [huntLocation] = useState(route.params.location);
@@ -26,7 +25,6 @@ export default function ConditionsPage({navigation, route}){
     const [spinEnd, setSpinEnd] = useState(new Date());
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
-    const [requiredlocationid, setRequiredlocationid] = useState('');
     const [selectedCondition, setSelectedCondition] = useState(-1)
     const [selectedConditionID, setSelectedConditionID] = useState(-1)
 
@@ -37,7 +35,7 @@ export default function ConditionsPage({navigation, route}){
     const [updateScreen, setUpdateScreen] = useState(false);
     const [timePicker, setTimePicker] = useState(false);
     const [huntCheck, setHuntCheck] = useState(false);
-    const [firstLoad, setFirstLoad] = useState(true);
+
     
     const disableTime =() =>{
         for (let i = 0; i < huntConditions.length; i++){
@@ -46,41 +44,6 @@ export default function ConditionsPage({navigation, route}){
             }
         }
         return false;
-        // let dateInterference = false;
-        // //date must be HH:MM:SS format 24 hour
-        
-        // const [shours, sminutes, sseconds] = sTime.split(":").map(Number);
-        // const [ehours, eminutes, eseconds] = eTime.split(":").map(Number);
-        
-        // const sDateNew = new Date();
-        // dateObject.setHours(shours);
-        // dateObject.setMinutes(sminutes);
-        // dateObject.setSeconds(sseconds);
-
-        // const eDateNew = new Date();
-        // dateObject.setHours(ehours);
-        // dateObject.setMinutes(eminutes);
-        // dateObject.setSeconds(eseconds);
-        
-        // for (let i = 0; i < huntConditions; i++){
-        //     if (huntConditions[i].requiredlocationid != null){
-        //         continue;
-        //     }else{
-        //         const [oshours, osminutes, osseconds] =huntConditions[i].starttime.split(":").map(Number);
-        //         const [oehours, oeminutes, oeseconds] =huntConditions[i].endtime.split(":").map(Number);
-                
-        //         const sDateOld = new Date();
-        //         dateObject.setHours(oshours);
-        //         dateObject.setMinutes(osminutes);
-        //         dateObject.setSeconds(osseconds);
-
-        //         const eDateOld = new Date();
-        //         dateObject.setHours(oehours);
-        //         dateObject.setMinutes(oeminutes);
-        //         dateObject.setSeconds(oeseconds);
-
-        //     }
-
         }
 
 
@@ -106,7 +69,6 @@ export default function ConditionsPage({navigation, route}){
 
     useEffect(() => {
         navigation.setOptions({
-          title: 'Conditions',
           headerRight: () => (
             <Button
               onPress={() => {
@@ -126,14 +88,7 @@ export default function ConditionsPage({navigation, route}){
       useEffect(()=>{(async () => {
         setSelectedCondition(-1);
         setPeriodCondition(false);
-        // if (huntLocations.length == 0 || !(huntLocations.find(obj => String(obj.locationid) == String(requiredlocationid)))){
-        //     if (firstLoad == true){
 
-        //     }else{
-        //         setRequiredlocationid('')
-        //     }
-            
-        // }
             console.log('Fetching Hunt conditions... (useEffect1)')
             console.log('Hunt:', Hunt)
             console.log('huntLocation:', huntLocation);
@@ -206,52 +161,6 @@ export default function ConditionsPage({navigation, route}){
     })()
     }, [huntCheck]);
 
-    // useEffect(() => {
-    //         console.log('conditions useEffect')
-    //         // console.log('locationsArr', locationsArr)
-    //         let tempLocArr = [];
-    //         let i = 0;
-    //         myHunts.forEach(async (element) =>{
-    //             if (String(element.huntid) != String(Hunt.huntid)){
-    //             let newForm = new FormData();
-    //             newForm.append('token', token);
-    //             newForm.append('huntid', element.huntid);
-    
-    //             const response = await fetch('https://cpsc345sh.jayshaffstall.com/getHuntLocations.php', {
-    //                 method: 'POST',
-    //                 body: newForm
-    //             });
-    //             if (response.ok){
-    //                 const data = await response.json()
-    //                 if (data.status == "error"){
-    //                     Alert.alert('Oops!', String(data.error), [
-    //                         {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-    //                     return;
-    //                 }else{
-    //                     console.log('current element name', element.name)
-    //                     console.log('data.locations:' , data.locations)
-    //                     if(data.locations[0] != null){
-    //                         tempLocArr.push(data.locations[0])
-    //                         console.log("temp loc arr", i, tempLocArr)
-    //                         console.log('requiredlocationid from route:', requiredlocationid)
-    //                         if(String(data.locations[0].locationid) == String(requiredlocationid)){
-    //                             console.log('this events id is the same as requiredlocationid:', String(data.locations[0].locationid) == String(requiredlocationid))
-    //                             setReqLocName(String(data.locations[0].name))
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //             else{
-    //                 console.log("Error fetching data, status code: " + response.status)
-    //                 Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(response.status), [
-    //                     {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-                    
-    //             }i++
-    //         }
-    //         })
-    //         // setLocationsArr(tempLocArr);
-
-    // }, [huntConditions, myHunts]);
 
     const handleLocationPress = async (name, value) =>{
         Alert.alert('ARE YOU SURE?', "You are choosing the location \'" + name + "' as the required location", [
@@ -289,9 +198,8 @@ export default function ConditionsPage({navigation, route}){
             else{
                 setStartTime('');
                 setEndTime('');
-                setRequiredlocationid(value);
+
                 SetUpdateCheck(!updateCheck);
-                setFirstLoad(false);
                 setView(0);
             }   
         }
@@ -334,9 +242,8 @@ export default function ConditionsPage({navigation, route}){
                 setStartTime('');
                 setEndTime('');
                 SetUpdateCheck(!updateCheck);
-                setFirstLoad(false);
                 setView(0);
-                setRequiredlocationid(value);
+
                 setUpdateScreen(false);
                 setSelectedCondition(-1);
                 setSelectedConditionID(-1);
@@ -374,17 +281,15 @@ export default function ConditionsPage({navigation, route}){
                 return;
             }
             else{
-                setRequiredlocationid('');
                 setStartTime('');
                 setEndTime('');
                 SetUpdateCheck(!updateCheck);
-                setFirstLoad(false);
-                //
+
                 setHuntCheck(!huntCheck);
                 setUpdateScreen(false);
                 setSelectedCondition(-1);
                 setSelectedConditionID(-1);
-                //updates hunt array (not rlly necesary/????)
+
                 setView(0);
             }   
         }
@@ -400,13 +305,13 @@ export default function ConditionsPage({navigation, route}){
         <KeyboardAvoidingView style={styles.container}>
             {view == 0? 
             <>
-            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
-                Location: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocation.name}</Text>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom:10}}>
+                Location Name: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocation.name}</Text>
             </Text>
             <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
                 Conditions:
             </Text>
-            <View style={{height:200, width: 250, alignContent: 'center'}}>
+            <View style={{height:275, width: 250, alignContent: 'center'}}>
             <FlatList
                     style={{marginTop: 10, alignContent: 'center'}}
                     data = {huntConditions}
@@ -415,7 +320,7 @@ export default function ConditionsPage({navigation, route}){
                         onPress={ () => {console.log('condition pressed', index + 1, item.conditionid, huntConditions[index]);setSelectedCondition(index);setSelectedConditionID(item.conditionid);setUpdateScreen(true);}}> 
                         <View>
                             <Text style={{fontSize: 20, marginTop: 10, marginBottom: 10, textAlign:'center'}}>
-                                {index}: {item.requiredlocationid == null? "Start: " + displayDate(item.starttime) +"\nEnd: " + displayDate(item.endtime):"Required location: " + (huntLocations.find((element) => element.locationid == item.requiredlocationid))? (huntLocations.find((element) => element.locationid == item.requiredlocationid)).name: ""}
+                                <Text style={{fontWeight:'bold'}}>{index}:</Text> {item.requiredlocationid == null? "Start: " + displayDate(item.starttime) +"\nEnd: " + displayDate(item.endtime):"Required location: " + (huntLocations.find((element) => element.locationid == item.requiredlocationid))? (huntLocations.find((element) => element.locationid == item.requiredlocationid)).name: ""}
                             </Text>
                         </View>
                     </TouchableOpacity>   
@@ -424,20 +329,10 @@ export default function ConditionsPage({navigation, route}){
                 />
             </View>
             
-            {/* {huntConditions.starttime == null && huntConditions.endtime == null?
-                <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
-                    Required Location Name: <Text style={{fontSize: 25, fontWeight: '200'}}>{reqlocName}</Text>{'\n'}Required Location ID: <Text style={{fontSize: 25, fontWeight: '200'}}>{requiredlocationid}</Text>
-                </Text>
-                :
-                <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
-                    Start Time: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntConditions == null? "":displayDate(huntConditions.starttime) +"\n" +"(" +huntConditions.starttime+ " UTC)" }</Text>{"\n"}End Time: <Text style={{fontSize: 25, fontWeight: '200'}}>: {huntConditions == null? "":displayDate(huntConditions.endtime) +"\n" +"(" +huntConditions.endtime + " UTC)" }</Text>
-                </Text>
-            } */}
-            
             
             {huntConditions.length > 0? 
             <Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginBottom: 10}}>
-                {selectedCondition == -1? "Select one of your conditions to update or delete it. Add more conditions below.":<TouchableOpacity onPress={()=>{setUpdateScreen(false);setSelectedCondition(-1);setSelectedConditionID(-1);}}><Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginBottom: 10}}>Select one of the options below to update this condition ({selectedCondition}) with. (Tap this to deselect)</Text></TouchableOpacity>}
+                {selectedCondition == -1? "Select one of your conditions to update or delete it. Add more conditions below:":<TouchableOpacity onPress={()=>{setUpdateScreen(false);setSelectedCondition(-1);setSelectedConditionID(-1);}}><Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginBottom: 10}}>Select one of the options below to update this condition ({selectedCondition}) with. (Tap this to deselect)</Text></TouchableOpacity>}
             </Text>:<Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginBottom: 10}}>
                 Select one of the options below to add a condition of that type.
             </Text>}
@@ -492,9 +387,6 @@ export default function ConditionsPage({navigation, route}){
 
             }
             
-            
-            
-            
             <AntDesign.Button backgroundColor={updateScreen == false? '#FFFFFF':'#FF0000'} disabled={updateScreen == false} name='delete' onPress={deleteConfirmation}>
                 Delete this Condition?
             </AntDesign.Button>
@@ -505,7 +397,7 @@ export default function ConditionsPage({navigation, route}){
             {timePicker == true?
             <>
                 <AntDesign.Button name='back' onPress={()=>{setView(0);setStartTime('');setEndTime('');setSpinStart(new Date());setSpinEnd(new Date());setTimePicker(false);}}>Go Back</AntDesign.Button>
-                <Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginBottom: 10}}>
+                <Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginBottom: 10, marginTop:20}}>
                     Time Condition
                 </Text>
                 <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom: 10}}>
@@ -557,13 +449,13 @@ export default function ConditionsPage({navigation, route}){
             </>
             :
             <>
-            <AntDesign.Button name='back' onPress={()=>{setHuntCheck(!huntCheck);setView(0);}}>Go Back</AntDesign.Button>
+            <AntDesign.Button name='back' onPress={()=>{setHuntCheck(!huntCheck);setView(0);}}>Back to Conditions</AntDesign.Button>
             {huntLocations.length > 1 ?
             <>
-            <Text style={{fontSize: 25, fontWeight: '200', textAlign:'center'}}>
-                    Here is a scrollable list of all of your available locations:
+            <Text style={{fontSize: 25, fontWeight: '200', textAlign:'center', marginTop:20}}>
+                    Here is a scrollable list of your other available locations:
             </Text>
-            <View style={{height:300, width: 250, alignContent: 'center'}}>
+            <View style={{height:300, width: 300, alignContent: 'center'}}>
                 <FlatList
                     style={{marginTop: 10, alignContent: 'center'}}
                     data = {huntLocations}
@@ -588,8 +480,10 @@ export default function ConditionsPage({navigation, route}){
                 />
             </View>
             <Text style={{fontSize: 25, fontWeight: '200', textAlign:'center'}}>
-                Tap on the location you want to make your current location's prerequisite condition{"\n"}<Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>(Unavailable ones include: the current location, locations that have your current location as a prerequisite, and locations you already have as prerequisites.)</Text>
+                Tap on the location you want to make your current location's prerequisite condition
             </Text>
+                <Text style={{fontSize: 25, fontWeight: 'bold', textAlign:'center', marginTop:20}}>Unavailable locations:{"\n"}<Text style={{fontSize: 25, fontWeight: '200', textAlign:'center'}}>Locations with requiring the current location, or this location's current required locations.</Text></Text>
+            
             </>
             :
             <>
@@ -599,7 +493,6 @@ export default function ConditionsPage({navigation, route}){
             </>}
             </>}
             </>}
-             
         </KeyboardAvoidingView>
     )
 }

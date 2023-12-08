@@ -1,4 +1,4 @@
-import { Text, TextInput, Button, Alert, KeyboardAvoidingView } from "react-native"
+import { Text, TextInput, Button, Alert, KeyboardAvoidingView, View, ScrollView} from "react-native"
 import { useEffect, useState, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { styles } from "./styles.js";
@@ -23,9 +23,7 @@ export default function HuntDetails({navigation, route}){
     const [huntLocations, setHuntLocations] = useState([]);
     const [huntConditions, setHuntConditions] = useState(null);
     const [newLocation, setNewLocation] = useState('')
-    const [condplaceholder, setCondplaceholder] = useState('Loading...')
     const [updateCheck, SetUpdateCheck] = useState(false);
-    // const [locationIsRequiredArr] = useState(route.params.locationIsRequired)
     const isFocused = useIsFocused();
     const [locationGranted, setLocationGranted] = useState(false)
     const [subscription, setSubscription] = useState(null)
@@ -56,7 +54,7 @@ export default function HuntDetails({navigation, route}){
                     identifier={index}
                     coordinate={{longitude: position.longitude, latitude: position.latitude, }}
                     title={position.name}
-                    description={position.description + " Tap me to edit!"}
+                    description={"Tap me to edit!"}
                     onCalloutPress={async() => {{navigation.navigate('Location', {hunt: Hunt, huntLocations: locationsData, locationIndex: index, requiredLocationIDS: requiredData.filter((value, index, self) => self.indexOf(value) === index)}); setRequiredLocationIDS(requiredData.filter((value, index, self) => self.indexOf(value) === index));stopTracking(); console.log('Location callout Pressed:', index, locationsData, requiredLocationIDS)}}}
                   />
                 )));
@@ -131,15 +129,6 @@ export default function HuntDetails({navigation, route}){
                 console.log("locations data:", data.locations);
                 console.log('Loc arr: ', huntLocations)
                 
-                // console.log("typeoflocationreqid:", typeof route.params.locationIsRequired[0], route.params.locationIsRequired[0])
-                // console.log("typeof data locid:", typeof data.locations[0].locationid, data.locations[0].locationid)
-                // console.log(route.params.locationIsRequired.find(element => element == data.locations[0].locationid))
-                // if(route.params.locationIsRequired.find(element => element == data.locations[0].locationid) != null){
-                //     console.log('true')
-                //     setLocationIsRequired(true);
-                // }else{
-                //     console.log('false')
-                // }
                 setHuntLocations(data.locations);
                 displayMarkers(data.locations, requiredLocationIDS);
             }
@@ -168,7 +157,7 @@ export default function HuntDetails({navigation, route}){
                     console.log('conditions on details screen data:', data);
                     if (data.status == "error"){
                         Alert.alert('Oops!', String(data.error), [
-                            {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                            {text: 'OK'}]);
                         return;
                     }
                     else{
@@ -195,84 +184,6 @@ export default function HuntDetails({navigation, route}){
             
     })()},[huntLocations]);
 
-    // useEffect(()=>{(async () => {
-    //     let templocations = {};
-    //     console.log('Fetching Hunt Location... (useEffect1)')
-    //     let formData = new FormData();
-    //     formData.append('token', token[0]);
-    //     formData.append('huntid', Hunt.huntid);
-    //     const result = await fetch('https://cpsc345sh.jayshaffstall.com/getHuntLocations.php', {
-    //         method: 'POST',
-    //         body: formData
-    //     });
-    //     if(result.ok){
-    //         const data = await result.json()
-    //         console.log('Status:', data.status)
-    //         console.log('data:', data);
-    //         if (data.status == "error"){
-    //             Alert.alert('Oops!', String(data.error), [
-    //                 {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-    //             return;
-    //         }
-    //         else{
-    //             console.log('data.locations:' , data.locations)
-    //             setHuntLocation(data.locations[0]);
-    //             templocations = data.locations[0];
-    //             if(templocations == null){
-    //             }
-    //         }   
-    //     }
-    //     else{
-    //         console.log("Error fetching data, status code: " + result.status)
-    //         Alert.alert('Oops! Something went wrong with "getHuntLocations.php" API. Please try again, or come back another time.', String(result.status), [
-    //             {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-            
-    //     }
-    //     console.log('Fetching Hunt conditions... (useEffect1)', templocations)
-    //     let form = new FormData();
-    //     if (templocations == null){
-    //         setCondplaceholder("None, please update the location first!")
-    //         return;
-    //     }
-
-    //     form.append('locationid', templocations.locationid);
-    //     form.append('token', token[0])
-    //     const response = await fetch('https://cpsc345sh.jayshaffstall.com/getConditions.php', {
-    //         method: 'POST',
-    //         body: form
-    //     });
-    //     if(response.ok){
-    //         const data = await response.json()
-    //         console.log('Status:', data.status)
-    //         console.log('UE1 CONDITIONS data:', data);
-    //         if (data.status == "error"){
-    //             Alert.alert('Oops!', String(data.error), [
-    //                 {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-    //             return;
-    //         }
-    //         else{
-    //             console.log('data.conditions:' , data.conditions)
-    //             setHuntConditions(data.conditions[0]);
-    //             if(data.conditions[0]!= null){
-    //                 console.log('conditions not null ')
-    //                 if (data.conditions[0].requiredlocationid != null){ 
-    //                     console.log('requiredlocationid not null:', data.conditions[0].requiredlocationid)
-    //                     setRequiredlocationid(data.conditions[0].requiredlocationid)
-    //                 }
-    //             }      
-    //             if(huntConditions == null){
-    //                 setCondplaceholder("None, tap here to update conditions!");
-    //             }
-    //         }   
-    //     }
-    //     else{
-    //         console.log("Error fetching data, status code: " + result.status)
-    //         Alert.alert('Oops! Something went wrong with "getConditions.php" from the API. Please try again, or come back another time.', String(result.status), [
-    //             {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-    //     }
-    // })()
-
-    // },[isFocused, updateCheck]);
 
     useEffect(()=>{(async()=>{
         console.log('UseEffect2')
@@ -470,7 +381,6 @@ export default function HuntDetails({navigation, route}){
 
     useEffect(() => {
         navigation.setOptions({
-          title: 'Details',
           headerRight: () => (
             <Button
               onPress={() => {
@@ -488,23 +398,36 @@ export default function HuntDetails({navigation, route}){
       }, [navigation, dispatch]);
     
     return(
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container} keyboardVerticalOffset={150}>
-            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
+        <KeyboardAvoidingView behavior='position' style={styles.container} keyboardVerticalOffset={100}>
+            <ScrollView>
+            <View style={styles.container}>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center', marginBottom:10}}>
                 Hunt: <Text style={{fontSize: 25, fontWeight: '200'}}>{Hunt.name}</Text>
             </Text>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
+                Your Hunt's Locations:
+            </Text>
+            <View style={{ width: 300, height: 250, alignSelf:'center', alignContent:'center', justifyContent: 'center', marginBottom:10}}>
             <MapView 
-                style={{ height: '40%', width: '80%' }}
+                style={{ height: '100%', width: '100%', alignSelf:'center'}}
                 initialRegion={userLocation}
                 >
             {displayMarkers(huntLocations, removeDuplicates(requiredLocationIDS, 'originalLocation', 'requiredlocationid'))}
             </MapView>
-            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center'}}>
+            </View>
+            <Text style={{fontSize: 20, fontWeight: '200', textAlign:'center', marginBottom:10}}>
+                Scroll down to add more locations, tap on markers to see more details
+            </Text>
+            <Text style={{fontSize: 25, fontWeight: '400', textAlign:'center',marginBottom:20}}>
                     Privacy: <Text style={{fontSize: 25, fontWeight: '200'}}>{Hunt.active == true?  "Active (Public)": "Not Active (Private)"}</Text>
             </Text>
             
             <AntDesign.Button backgroundColor='#FF0000' name='delete' onPress={deleteConfirmation}>Delete this Hunt?</AntDesign.Button>
-            <Text style={{fontSize:20, fontWeight:'300', marginTop: 20}}>Want to update this hunt's details?</Text>
-            <TextInput value={newName} onChangeText={text => setNewName(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3'}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new Hunt name:' />
+            </View>
+            <View style={styles.container}>
+            <Text style={{fontSize:20, fontWeight:'600', marginTop: 20}}>Want to update this hunt's details?</Text>
+            <Text style={{fontSize:20, fontWeight:'200', marginTop: 20, textAlign:'center', marginBottom:20}}>Enter a new name, or change the privacy of your hunt below, press the button when you're ready.</Text>
+            <TextInput value={newName} onChangeText={text => setNewName(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom:20}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a new Hunt name:' />
             <Dropdown
                 style={styles.dropdown}
                 placeholderStyle={styles.placeholderStyle}
@@ -525,12 +448,26 @@ export default function HuntDetails({navigation, route}){
                     <AntDesign style={styles.icon} color="black" name="Safety" size={20} />
                 )}
             />
-            <Button title="Update this Hunt" onPress={updateConfirmation} disabled={newName == '' && activeValue == ''}/>
-            <Text style={{fontSize:20, fontWeight:'300'}}>
-            Add new locations to this Hunt here (Defaults to your current Position):
+            <View style={{marginTop:20}}>
+                <AntDesign.Button onPress={updateConfirmation} disabled={newName == '' && activeValue == ''} backgroundColor={newName == '' && activeValue == ''?'grey':'#077AFF'}name='upload'>Update this Hunt</AntDesign.Button>
+            
+            </View>
+            </View>
+            <View style={styles.container}>
+            <Text style={{fontSize:20, fontWeight:'600', textAlign:'center', marginBottom:20}}>
+            Add new locations to this Hunt here:
             </Text>
-            <TextInput value={newLocation} onChangeText={text => setNewLocation(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3'}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a Location name:' />
-            <Button title="Add the location" onPress={addLocation} disabled={newLocation == ''}/>
+            <Text style={{fontSize:20, fontWeight:'200', textAlign:'center', marginBottom:20}}>
+                Enter the name for the location here (Defaults to your current Position)
+            </Text>
+            <TextInput value={newLocation} onChangeText={text => setNewLocation(text)} style={{width: 300, height: 30, backgroundColor: '#D3D3D3', marginBottom:20}} placeholderTextColor='#000000' maxLength={255} textAlign='center' placeholder='Enter a Location name:' />
+            <View style={{margin:20}}>
+            <AntDesign.Button onPress={addLocation} disabled={newLocation == ''} backgroundColor={newLocation == ''?'grey':'#077AFF'} name='plussquareo'>Add the location</AntDesign.Button>
+            
+            </View>
+            
+            </View>
+            </ScrollView>
         </KeyboardAvoidingView>
     )
 }

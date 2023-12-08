@@ -49,7 +49,7 @@ export default function SplashPage({navigation}) {
             <Text style={{fontWeight: 'bold', textAlign:'center', fontSize:30}}>
                 Nick's Scavenger Hunt!
             </Text>
-            <Image style={{resizeMode: 'center', width: 300, height: 300, marginBottom: 15, alignContent:"center"}} source={require('./assets/magnifyingglass.png')}/>
+            <Image style={{resizeMode: 'contain', width: 300, height: 300, marginBottom: 15, alignContent:"center"}} source={require('./assets/magnifyingglass.png')}/>
             <Text style={{ textAlign:'center', fontSize:15}}>
                 Loading Content...
             </Text>
