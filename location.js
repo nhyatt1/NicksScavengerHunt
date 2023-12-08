@@ -1,13 +1,15 @@
-import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView, TouchableOpacity, ScrollView } from "react-native"
-import { useEffect, useState } from "react"
+import { View, Text, TextInput, Button, Alert, KeyboardAvoidingView, TouchableOpacity, ScrollView } from "react-native";
+
+import { useEffect, useState } from "react";
+
 import { useDispatch, useSelector } from "react-redux";
-import { styles } from "./styles.js";
-import AntDesign from '@expo/vector-icons/AntDesign';
+
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
+
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { styles } from "./styles.js";
 import { removeToken } from "./slices.js";
-
-
 
 export default function LocationPage({navigation, route}){
     const dispatch = useDispatch();
@@ -30,22 +32,17 @@ export default function LocationPage({navigation, route}){
 
     const [updateCheck, SetUpdateCheck] = useState(false);
 
-  
-
     const [region, setRegion] = useState({
-            latitude: route.params.huntLocations[route.params.locationIndex].latitude,
-            longitude: route.params.huntLocations[route.params.locationIndex].longitude,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05})
-
+        latitude: route.params.huntLocations[route.params.locationIndex].latitude,
+        longitude: route.params.huntLocations[route.params.locationIndex].longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05
+    });
 
     useEffect(()=>{(async()=>{
-        console.log('updating locations array locations screen', requiredLocationIDS)
         let tempParents = []
         for (let i = 0; i < requiredLocationIDS.length; i++){
-            console.log('element loop after updating locations array:',requiredLocationIDS, requiredLocationIDS[i].requiredlocationid, huntLocations[locationIndex].locationid)
             if (parseInt(requiredLocationIDS[i].requiredlocationid) == parseInt(huntLocations[locationIndex].locationid)){
-                console.log('this location is required')
                 setLocationIsRequired(true);
                 tempParents.push(requiredLocationIDS[i].originalLocation);
                 setParentLocationIDS(tempParents);
@@ -57,18 +54,21 @@ export default function LocationPage({navigation, route}){
             const result = await fetch('https://cpsc345sh.jayshaffstall.com/getHuntLocations.php',{
                 method: 'POST',
                 body: formData
-                })
+            });
             if (result.ok){
-                const data = await result.json()
-                console.log("locations to be:", data.locations);
-                console.log('previous locations: ', huntLocations)
-                
-                setHuntLocations(data.locations);
+                const data = await result.json();
+                if (data.status == "error"){
+                    Alert.alert('Oops!', String(data.error), [
+                        {text: 'OK'}]);
+                    return;
+                }
+                else{
+                    setHuntLocations(data.locations);
+                }
             }
             else{
-                console.log("Error fetching data, status code: " + result.status)
                 Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                    {text: 'OK'}]);
             }
     })()}, [updateCheck])
     
@@ -77,9 +77,7 @@ export default function LocationPage({navigation, route}){
           headerRight: () => (
             <Button
               onPress={() => {
-                console.log('User Logged out!')
                 dispatch(removeToken());
-                console.log('values in token array:', token)
                 navigation.reset({
                   index: 0,
                   routes: [{ name: 'Authentication' }],
@@ -89,10 +87,9 @@ export default function LocationPage({navigation, route}){
             />
           ),
         });
-      }, [navigation, dispatch]);
+    }, [navigation, dispatch]);
 
     const setLocationPosition = async () =>{
-        console.log('Updating Location position...')
         let formData = new FormData();
         formData.append('token', token[0]);
         formData.append('locationid', huntLocations[locationIndex].locationid);
@@ -105,32 +102,27 @@ export default function LocationPage({navigation, route}){
                 latitudeDelta: 0.05,
                 longitudeDelta: 0.05
             })
-            console.log("new region:", region)
         
         const result = await fetch('https://cpsc345sh.jayshaffstall.com/updateHuntLocationPosition.php', {
             method: 'POST',
             body: formData
         });
         if(result.ok){
-            const data = await result.json()
-            console.log('Status:', data.status)
-            console.log('location position update data:', data);
+            const data = await result.json();
             if (data.status == "error"){
                 Alert.alert('Oops!', String(data.error), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                    {text: 'OK'}]);
                 return;
             }
             else{
-                console.log('success');
                 SetUpdateCheck(!updateCheck);
                 setNewLatitude('')
                 setNewLongitude('')
             }   
         }
         else{
-            console.log("Error fetching data, status code: " + result.status)
             Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                {text: 'OK'}]);
             return;
         }
     }
@@ -138,12 +130,9 @@ export default function LocationPage({navigation, route}){
     const updateConfirmation = () =>
         Alert.alert('ARE YOU SURE?', "You are changing this location's details.", [
             {text: 'Confirm', onPress:() => updateLocation()},
-            {text: 'Cancel', onPress:()=>{console.log('Cancel Pressed')}, style: 'cancel'}
+            {text: 'Cancel', style: 'cancel'}
     ]);
     const updateLocation = async () =>{
-        // need 2 add the index.
-
-        console.log('Updating Location...')
         let formData = new FormData();
         formData.append('token', token[0]);
         formData.append('locationid', huntLocations[locationIndex].locationid);
@@ -167,17 +156,13 @@ export default function LocationPage({navigation, route}){
             body: formData
         });
         if(result.ok){
-            const data = await result.json()
-            console.log('Status:', data.status)
-            console.log('location Update data:', data);
+            const data = await result.json();
             if (data.status == "error"){
                 Alert.alert('Oops!', String(data.error), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                    {text: 'OK'}]);
                 return;
             }
             else{
-                console.log('update success')
-                // do something to refresh page
                 SetUpdateCheck(!updateCheck);
                 setNewName('');
                 setNewClue('');
@@ -185,9 +170,8 @@ export default function LocationPage({navigation, route}){
             }   
         }
         else{
-            console.log("Error fetching data, status code: " + result.status)
             Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                {text: 'OK'}]);
             return;
         }
     }
@@ -198,7 +182,7 @@ export default function LocationPage({navigation, route}){
         }else{
             Alert.alert('ARE YOU SURE?', 'If you delete this Location, it will not be recoverable.', [
                 {text: 'Confirm', onPress:() => deleteLocation()},
-                {text: 'Cancel', onPress:()=>{console.log('Cancel Pressed')}, style: 'cancel'}])
+                {text: 'Cancel', style: 'cancel'}])
         }
     };
 
@@ -206,7 +190,6 @@ export default function LocationPage({navigation, route}){
         if (parseInt(huntLocations[locationIndex].locationid) == parseInt(requiredLocationIDS.requiredlocationid)){
             
         }
-        console.log('Deleting Location...')
         let formData = new FormData();
         formData.append('token', token[0]);
         formData.append('locationid', huntLocations[locationIndex].locationid);
@@ -216,12 +199,10 @@ export default function LocationPage({navigation, route}){
             body: formData
         });
         if(result.ok){
-            const data = await result.json()
-            console.log('Status:', data.status)
-            console.log('delete data:', data);
+            const data = await result.json();
             if (data.status == "error"){
                 Alert.alert('Oops!', String(data.error), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                    {text: 'OK'}]);
                 return;
             }
             else{
@@ -229,9 +210,8 @@ export default function LocationPage({navigation, route}){
             }   
         }
         else{
-            console.log("Error fetching data, status code: " + result.status)
             Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                {text: 'OK'}]);
             return;
         }
     }
@@ -247,6 +227,7 @@ export default function LocationPage({navigation, route}){
                 minZoomLevel={14}
                 zoomEnabled={false}
                 rotateEnabled={false}
+                pitchEnabled={false}
                 scrollEnabled={false}
                 region={region}
                 >
@@ -261,7 +242,7 @@ export default function LocationPage({navigation, route}){
                 Location Name: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocations[locationIndex].name}{'\n'}</Text>Description: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocations[locationIndex].description == ''? 'None' : huntLocations[locationIndex].description}{"\n"}</Text>Clue: <Text style={{fontSize: 25, fontWeight: '200'}}>{huntLocations[locationIndex].clue == ''? 'None' : huntLocations[locationIndex].clue}</Text>
             </Text>
             <TouchableOpacity
-                        onPress={ () => {{navigation.navigate('Conditions', {hunt: Hunt, location: huntLocations[locationIndex], huntLocations: huntLocations, parentLocationIDS: parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index)}); setParentLocationIDS(parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index)); setNewClue(''); setNewDescription(''); setNewName(''); setNewLongitude(''); setNewLatitude('');console.log('condit presed', parentLocationIDS)}}}> 
+                        onPress={ () => {{navigation.navigate('Conditions', {hunt: Hunt, location: huntLocations[locationIndex], huntLocations: huntLocations, parentLocationIDS: parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index)}); setParentLocationIDS(parentLocationIDS.filter((value, index, self) => self.indexOf(value) === index)); setNewClue(''); setNewDescription(''); setNewName(''); setNewLongitude(''); setNewLatitude('');}}}> 
                 <Text style={{fontSize: 25, fontWeight: '600', textAlign:'center',marginTop:30, marginBottom:30}}>
                     Tap here to see the conditions of this location.
                 </Text>
@@ -269,9 +250,6 @@ export default function LocationPage({navigation, route}){
             <AntDesign.Button name='delete' backgroundColor={'#FF0000'} onPress={deleteConfirmation}>Delete this Location?</AntDesign.Button>
             </View>
 
-            
-            
-            
             <View style={styles.container}>
             <Text style={{fontSize: 25, fontWeight: '600', textAlign:'center', marginBottom:20}}>
                         Update the coordinates of your Hunt's position here:

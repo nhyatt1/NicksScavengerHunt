@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { Text, View, TextInput, Button, Alert, KeyboardAvoidingView} from "react-native"
+
 import { addToken } from "./slices.js";
 import { styles } from "./styles.js";
 
@@ -10,23 +11,14 @@ export default function AuthenticationPage({navigation}){
     const [userPassword, setUserPassword] = useState('');
     const [userConfirm, setUserConfirm] = useState('');
     const dispatch = useDispatch();
-    const token = useSelector((state) => state.token.tokens)
 
-    let userRef = useRef(null);
-    let passwordRef = useRef(null);
-    let confirmRef = useRef(null);
 
-    const [message, setMessage] = useState('')
-    const [userToken, setUserToken] = useState('')
 
-    // useEffect = async () =>{
-    //     if (token.length > 0){navigation.navigate('Hunts')}
-    // }
     const registerUser = async () => {
 
         if (userPassword != userConfirm){
             Alert.alert('Oops!', 'Your passwords do not match.', [
-                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                {text: 'OK'}]);
             return;
         }
 
@@ -38,28 +30,25 @@ export default function AuthenticationPage({navigation}){
             body: formData
         });
         if (result.ok){
-            const data = await result.json()
-            console.log('Status:', data.status)
+            const data = await result.json();
             if (data.status == "error"){
                 Alert.alert('Oops!', String(data.error), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                    {text: 'OK'}]);
                 return;
             }else{
-                console.log('user\'s token:', data.token);
                 dispatch(addToken(String(data.token)));
-                navigation.replace('Hunts');
+                navigation.replace('Menu');
             }
             
         }
         else{
-            console.log("Error fetching data, status code: " + result.status)
             Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                {text: 'OK'}]);
             return;
         }
     }  
-    const loginUser = async () => {
 
+    const loginUser = async () => {
         let formData = new FormData();
         formData.append('userid', userID);
         formData.append('password', userPassword);
@@ -68,32 +57,25 @@ export default function AuthenticationPage({navigation}){
             body: formData
         });
         if (result.ok){
-            const data = await result.json()
-            console.log('Status:', data.status)
+            const data = await result.json();
             if (data.status == "error"){
                 Alert.alert('Oops!', String(data.error), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                    {text: 'OK'}]);
                 return;
             }
             else{
-                console.log('user\'s token:', data.token);
                 dispatch(addToken(data.token));
                 navigation.replace('Menu')
             }
             
         }
         else{
-            console.log("Error fetching data, status code: " + result.status)
             Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                {text: 'OK'}]);
             return;
         }
     }
 
-    // <TextInput placeholder= 'Enter a message to encrypt.' 
-    // style={{width: 300, height: 25, backgroundColor: '#857b69', color: 'white'}}
-    // onChangeText={text => setMessage(text)}
-    // />
     return(
         <KeyboardAvoidingView style={styles.container}>
             {!loginVisible ? 
@@ -107,15 +89,15 @@ export default function AuthenticationPage({navigation}){
                 </Text>
                 <View style={{flexDirection: "row", alignItems: 'center', justifyContent: 'center', margin: 10}}>
                     <Text>Username: </Text>
-                    <TextInput placeholderTextColor='#000000' maxLength={255} onChangeText={text => setUserID(text)} ref={userRef} placeholder= 'Enter a username' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
+                    <TextInput value={userID} placeholderTextColor='#000000' maxLength={255} onChangeText={text => setUserID(text)} placeholder= 'Enter a username' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
                 </View>
                 <View style={{flexDirection: "row", alignItems: 'center', justifyContent: 'center', margin: 10}}>
                     <Text>Password: </Text>
-                    <TextInput placeholderTextColor='#000000' textContentType='oneTimeCode' autoComplete='password' secureTextEntry={true} onChangeText={text => setUserPassword(text)} ref={passwordRef}  placeholder= 'Enter a password' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
+                    <TextInput value={userPassword} placeholderTextColor='#000000' textContentType='oneTimeCode' autoComplete='password' secureTextEntry={true} onChangeText={text => setUserPassword(text)} placeholder= 'Enter a password' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
                 </View>
                 <View style={{flexDirection: "row", alignItems: 'center', justifyContent: 'center', margin: 10}}>
                     <Text>Confirm password: </Text>
-                    <TextInput textContentType='oneTimeCode' placeholderTextColor='#000000' autoComplete='password' secureTextEntry={true} onChangeText={text => setUserConfirm(text)} ref={confirmRef} placeholder= 'Re-enter password' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
+                    <TextInput value={userConfirm} textContentType='oneTimeCode' placeholderTextColor='#000000' autoComplete='password' secureTextEntry={true} onChangeText={text => setUserConfirm(text)} placeholder= 'Re-enter password' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
                 </View>
                 
                 <Button title="Register" onPress={registerUser} disabled={userID == '' || userID.length > 255 ||  userConfirm.length < 12 || userPassword.length < 12|| userPassword == ''}/>
@@ -124,7 +106,7 @@ export default function AuthenticationPage({navigation}){
                 <Text style={{fontWeight: 'bold', fontSize: 25, textAlign: 'center'}}>
                     Already have an account?
                 </Text> 
-                <Button title="Login Here" onPress={()=>{setLoginVisible(!loginVisible); if(userRef.current !== null){userRef.current.clear(); setUserID('')}; if (passwordRef.current !== null){passwordRef.current.clear(); setUserPassword('')}; if(confirmRef.current !== null){confirmRef.current.clear()} setUserConfirm('')}}/>
+                <Button title="Login Here" onPress={()=>{setLoginVisible(!loginVisible);setUserConfirm('');setUserPassword('');setUserID('')}}/>
             </View>
             </>
             : 
@@ -135,11 +117,11 @@ export default function AuthenticationPage({navigation}){
                 </Text>
                 <View style={{flexDirection: "row", alignItems: 'center', justifyContent: 'center', margin: 10}}>
                     <Text>Username: </Text>
-                    <TextInput onChangeText={text => setUserID(text)} ref={userRef} placeholderTextColor='#000000' placeholder= 'Enter your username' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
+                    <TextInput value={userID} onChangeText={text => setUserID(text)} placeholderTextColor='#000000' placeholder= 'Enter your username' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
                 </View>
                 <View style={{flexDirection: "row", alignItems: 'center', justifyContent: 'center', margin: 10}}>
                     <Text>Password: </Text>
-                    <TextInput textContentType='none' autoComplete='off' placeholderTextColor='#000000' onChangeText={text => setUserPassword(text)} ref={passwordRef} secureTextEntry={true} placeholder= 'Enter your password' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
+                    <TextInput value={userPassword} textContentType='none' autoComplete='off' placeholderTextColor='#000000' onChangeText={text => setUserPassword(text)} secureTextEntry={true} placeholder= 'Enter your password' style={{width: 200, height:30, backgroundColor: '#D3D3D3'}}/>
                 </View>
                 <Button title="Login" onPress={loginUser} disabled={userID == '' || userID.length > 255 || userPassword.length < 12|| userPassword == ''}/>
             </View>
@@ -147,13 +129,9 @@ export default function AuthenticationPage({navigation}){
                 <Text style={{fontWeight: 'bold', fontSize: 25, textAlign: 'center'}}>
                     Need to make an account?    
                 </Text> 
-                <Button title="Register Here" onPress={()=>{setLoginVisible(!loginVisible); if(userRef.current !== null){userRef.current.clear(); setUserID('')}; if (passwordRef.current !== null) {passwordRef.current.clear();setUserPassword('')}}}/>
+                <Button title="Register Here" onPress={()=>{setLoginVisible(!loginVisible);setUserID('');setUserPassword('')}}/>
             </View> 
             </>}
-            
-            
         </KeyboardAvoidingView>
-        
-        
     )
 }

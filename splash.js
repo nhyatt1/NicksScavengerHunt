@@ -1,26 +1,24 @@
 
 import { Text, Image, View, Button } from "react-native"
-import { styles } from "./styles.js";
-import { useSelector, useDispatch } from "react-redux";
-import { removeToken } from "./slices.js";
+import { useSelector } from "react-redux";
 import { useEffect } from "react";
 
+import { styles } from "./styles.js";
+
 export default function SplashPage({navigation}) {
-    const dispatch = useDispatch();
     const token = useSelector((state) => state.token.tokens)
+
     //Needs to wait and check that user login is valid, if YES, send to ScavengerHunts screen, if NO, send to AuthenticationPage
     useEffect(() => {
         (async () => {
             let formData = new FormData();
             formData.append("token", token[0]);
-
             const result = await fetch('https://cpsc345sh.jayshaffstall.com/verifyToken.php',{
                 method: 'POST',
                 body: formData
                 });
             if (result.ok){
-                const data = await result.json()
-                console.log(data);
+                const data = await result.json();
                 if(data.status == "error"){
                     navigation.replace('Authentication')
                 }
@@ -29,21 +27,12 @@ export default function SplashPage({navigation}) {
                 }
             }
             else{
-                console.log("Error fetching data, status code: " + result.status)
                 Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-                   
+                    {text: 'OK'}]);
             }
-                // .then(response => {
-                // console.log(response);
-
-                // }).catch(err => {
-                //     console.log(err)
-                // });console.log(data);
-    })()
-
+        })()
     });
-    
+
     return(
         <View style={styles.container}>
             <Text style={{fontWeight: 'bold', textAlign:'center', fontSize:30}}>
@@ -55,7 +44,5 @@ export default function SplashPage({navigation}) {
             </Text>
             <Button title="Authentication Screen" onPress={()=>{navigation.replace('Authentication')}}/>
         </View>
-        
-
     )
 }

@@ -1,9 +1,11 @@
 import { useEffect, useState} from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, Alert, Image, TextInput } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useIsFocused } from '@react-navigation/native';
+
 import { removeToken } from './slices.js';
 import { styles } from './styles.js';
-import { useIsFocused } from '@react-navigation/native';
+
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 export default function FindHunts({navigation, route}){
@@ -33,8 +35,7 @@ export default function FindHunts({navigation, route}){
     });
   }, [navigation, dispatch]);
     
-  useEffect(() => {
-    (async () => {
+  useEffect(() => {(async () => {
       let formData = new FormData();
       formData.append("token", token[0]);
       formData.append("filter", filter)
@@ -45,14 +46,20 @@ export default function FindHunts({navigation, route}){
         })
       if (result.ok){
         const data = await result.json()
-        setActiveHunts(data.hunts);
-        let tempCompleted = [];
-        for (let i = 0; i < data.hunts.length; i++){
-          if (data.hunts[i].completed ==100){
-            tempCompleted.push(data.hunts[i])
+        if (data.status == "error"){
+          Alert.alert('Oops!', String(data.error), [
+              {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+          return;
+        }else{
+          setActiveHunts(data.hunts);
+          let tempCompleted = [];
+          for (let i = 0; i < data.hunts.length; i++){
+            if (data.hunts[i].completed ==100){
+              tempCompleted.push(data.hunts[i])
+            }
           }
+          setHuntsCompleted(tempCompleted)
         }
-        setHuntsCompleted(tempCompleted)
       }
       else{
         Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
@@ -61,23 +68,25 @@ export default function FindHunts({navigation, route}){
     }
   )()}, [isFocused, filter]);
 
-  useEffect(() => {
-    (async () => {
+  useEffect(() => {(async () => {
       let formData = new FormData();
       formData.append("token", token[0]);
-
       const result = await fetch('https://cpsc345sh.jayshaffstall.com/findActiveHunts.php',{
         method: 'POST',
         body: formData
-        })
-
+      });
       if (result.ok){
         const data = await result.json()
-        setHuntsPlaying(data.hunts);
-      }
-      else{
+        if (data.status == "error"){
+          Alert.alert('Oops!', String(data.error), [
+              {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+          return;
+        }else{
+          setHuntsPlaying(data.hunts);
+        }
+      }else{
         Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-            {text: 'OK'}]);
+        {text: 'OK'}]);
       }
     })()
   }, [isFocused]);

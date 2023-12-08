@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, Alert, TextInput, KeyboardAvoidingView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useIsFocused } from '@react-navigation/native';
+
 import { removeToken } from './slices.js';
 import { styles } from './styles.js';
-import { useIsFocused } from '@react-navigation/native';
+
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 export default function HuntsPage({navigation}){
@@ -13,8 +15,6 @@ export default function HuntsPage({navigation}){
     const [newHunt, setNewHunt] = useState('')
     const [myHunts, setMyHunts] = useState([])
     const [buttonPressed, setButtonPressed] = useState(false);
-    // const [locationsArr, setLocationsArr] = useState([]);
-    const [conditionsArr, setConditionsArr] = useState([]);
     const isFocused = useIsFocused();
 
     useEffect(() => {
@@ -22,7 +22,6 @@ export default function HuntsPage({navigation}){
           headerRight: () => (
             <Button
               onPress={() => {
-                console.log('User Logged out!')
                 dispatch(removeToken());
                 navigation.reset({
                   index: 0,
@@ -33,51 +32,47 @@ export default function HuntsPage({navigation}){
             />
           ),
         });
-      }, [navigation, dispatch]);
+    }, [navigation, dispatch]);
 
-      useEffect(() => {
+    useEffect(() => {
         (async () => {
             let formData = new FormData();
             formData.append("token", token[0]);
-
             const result = await fetch('https://cpsc345sh.jayshaffstall.com/getMyHunts.php',{
                 method: 'POST',
                 body: formData
                 })
             if (result.ok){
                 const data = await result.json()
-                console.log("general data:", data);
-                setMyHunts(data.hunts);
-                console.log('amount of hunts:', data.hunts.length);
-                console.log('hunt info on hunts retrieved:', data.hunts);
+                if (data.status == "error"){
+                    Alert.alert('Oops!', String(data.error), [
+                        {text: 'OK'}]);
+                    return;
+                }
+                else{
+                    setMyHunts(data.hunts);
+                }
             }
             else{
-                console.log("Error fetching data, status code: " + result.status)
                 Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
-                   
+                    {text: 'OK'}]);
             }
-                
-    })()
+        })()
     }, [buttonPressed, isFocused]);
 
     const addHunt = async () => {
         let formData = new FormData();
         formData.append('name', newHunt);
         formData.append('token', token[0]);
-
         const result = await fetch('https://cpsc345sh.jayshaffstall.com/addHunt.php', {
             method: 'POST',
             body: formData
         });
         if (result.ok){
             const data = await result.json()
-            
-            console.log('Status:', data.status)
-            console.log(data);
             if (data.status == "error"){
                 Alert.alert('Oops!', String(data.error), [
-                    {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                    {text: 'OK'}]);
                 return;
             }
             else{
@@ -85,12 +80,12 @@ export default function HuntsPage({navigation}){
             }   
         }
         else{
-            console.log("Error fetching data, status code: " + result.status)
             Alert.alert('Oops! Something went wrong with our database. Please try again, or come back another time.', String(result.status), [
-                {text: 'OK', onPress:()=>{console.log('OK Pressed');}}]);
+                {text: 'OK'}]);
             return;
         }
     }
+
     return(
         <KeyboardAvoidingView behavior='position' style={styles.container} keyboardVerticalOffset={100}>
             <View style={styles.container}>
@@ -106,7 +101,7 @@ export default function HuntsPage({navigation}){
                     data = {myHunts}
                     renderItem ={({item}) => (
                     <TouchableOpacity
-                        onPress={ () => {setButtonPressed(!buttonPressed); {navigation.navigate('Details', {hunt: item}); console.log('Hunt Pressed', item), console.log('conditions Arr on press:', conditionsArr)}} }> 
+                        onPress={ () => {setButtonPressed(!buttonPressed); {navigation.navigate('Details', {hunt: item});}} }> 
                         <View>
                             <Text style={{fontSize: 20, marginTop: 10, fontWeight:'200',marginBottom: 10, textAlign:'center'}}>
                             <Text style={{fontWeight:'400'}}>Hunt:</Text> {item.name}

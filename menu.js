@@ -1,33 +1,32 @@
 import { useEffect } from 'react';
 import { View, Text, Button, Image } from 'react-native';
 import { useDispatch } from 'react-redux';
+
 import { removeToken } from './slices.js';
 import { styles } from './styles.js';
-import { useIsFocused } from '@react-navigation/native';
+
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 export default function MenuPage({navigation}){
-    const dispatch = useDispatch();
-    useEffect(() => {
-        navigation.setOptions({
-          title: 'Menu',
-          headerRight: () => (
-            <Button
-              onPress={() => {
-                console.log('User Logged out!')
-                dispatch(removeToken());
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Authentication' }],
-                });
-              }}
-              title="Logout"
-            />
-          ),
-        });
-      }, [navigation, dispatch]);
+  const dispatch = useDispatch();
+  useEffect(() => {
+      navigation.setOptions({
+        headerRight: () => (
+          <Button
+            onPress={() => {
+              dispatch(removeToken());
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Authentication' }],
+              });
+            }}
+            title="Logout"
+          />
+        ),
+      });
+  }, [navigation, dispatch]);
 
-return(
+  return(
     <View style={styles.container}>
         <Text style={{fontWeight: 'bold', textAlign:'center', fontSize:30, marginBottom:20}}>
           Welcome to Nick's Scavenger Hunt!

@@ -1,9 +1,11 @@
 import { useEffect, useState} from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, Alert, Image } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useIsFocused } from '@react-navigation/native';
+
 import { removeToken } from './slices.js';
 import { styles } from './styles.js';
-import { useIsFocused } from '@react-navigation/native';
+
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 export default function PlayHunts({navigation, route}){
